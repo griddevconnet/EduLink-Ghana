@@ -62,7 +62,8 @@ app.get('/api', (req, res) => {
 const authRoutes = require('./routes/auth');
 const schoolRoutes = require('./routes/schools');
 const studentRoutes = require('./routes/students');
-// const attendanceRoutes = require('./routes/attendance');
+const attendanceRoutes = require('./routes/attendance');
+const assessmentRoutes = require('./routes/assessments');
 // const callRoutes = require('./routes/calls');
 // const analyticsRoutes = require('./routes/analytics');
 
@@ -70,7 +71,8 @@ const studentRoutes = require('./routes/students');
 app.use('/api/auth', authRoutes);
 app.use('/api/schools', schoolRoutes);
 app.use('/api/students', studentRoutes);
-// app.use('/api/attendance', attendanceRoutes);
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/assessments', assessmentRoutes);
 // app.use('/api/calls', callRoutes);
 // app.use('/api/analytics', analyticsRoutes);
 
