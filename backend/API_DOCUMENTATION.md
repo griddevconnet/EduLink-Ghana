@@ -374,37 +374,202 @@ All endpoints return consistent error responses:
 
 ---
 
-## Coming Soon
+## Schools API ✅
 
-### Students API
-- `POST /api/students` - Create student
-- `GET /api/students` - List students
-- `GET /api/students/:id` - Get student
-- `PUT /api/students/:id` - Update student
-- `DELETE /api/students/:id` - Delete student
-- `GET /api/students/out-of-school` - Get out-of-school children
+### Create School
+**POST** `/api/schools`
+**Access:** Admin only
 
-### Schools API
-- `POST /api/schools` - Create school
-- `GET /api/schools` - List schools
-- `GET /api/schools/:id` - Get school
-- `PUT /api/schools/:id` - Update school
+**Request Body:**
+```json
+{
+  "name": "Accra Primary School",
+  "region": "Greater Accra",
+  "district": "Accra Metro",
+  "address": "123 Main St",
+  "gps": {
+    "latitude": 5.6037,
+    "longitude": -0.1870
+  },
+  "type": "Primary",
+  "ownership": "Public"
+}
+```
 
-### Attendance API
-- `POST /api/attendance` - Mark attendance
-- `GET /api/attendance` - Get attendance records
-- `GET /api/attendance/student/:id` - Get student attendance
-- `GET /api/attendance/school/:id` - Get school attendance
+### List Schools
+**GET** `/api/schools?region=Greater Accra&page=1&limit=20`
 
-### Learning Assessments API
-- `POST /api/assessments` - Record assessment
-- `GET /api/assessments/student/:id` - Get student assessments
-- `GET /api/assessments/school/:id` - Get school summary
+### Get School
+**GET** `/api/schools/:id`
 
-### Analytics API
-- `GET /api/analytics/disaggregated` - Disaggregated data reports
-- `GET /api/analytics/school/:id` - School dashboard
-- `GET /api/analytics/district/:name` - District summary
+### Get School Statistics
+**GET** `/api/schools/:id/stats`
+
+---
+
+## Students API ✅
+
+### Create Student
+**POST** `/api/students`
+**Access:** Teacher, Headteacher, Admin
+
+**Request Body:**
+```json
+{
+  "firstName": "Kwame",
+  "lastName": "Mensah",
+  "dateOfBirth": "2010-05-15",
+  "gender": "Male",
+  "school": "507f1f77bcf86cd799439011",
+  "class": "Primary 4",
+  "enrollmentStatus": "enrolled",
+  "parentContacts": [
+    {
+      "phone": "+233241234567",
+      "name": "Ama Mensah",
+      "relation": "Mother",
+      "preferredLanguage": "Twi"
+    }
+  ]
+}
+```
+
+### Get Out-of-School Children ⭐
+**GET** `/api/students/out-of-school?region=Ashanti&gender=Female`
+
+### Get Disaggregated Statistics ⭐
+**GET** `/api/students/stats/disaggregated?school=:id`
+
+---
+
+## Attendance API ✅
+
+### Mark Attendance
+**POST** `/api/attendance`
+
+**Request Body:**
+```json
+{
+  "student": "507f1f77bcf86cd799439011",
+  "school": "507f1f77bcf86cd799439012",
+  "date": "2025-11-06",
+  "status": "absent",
+  "reason": "sick"
+}
+```
+
+### Bulk Mark Attendance
+**POST** `/api/attendance/bulk`
+
+### Get Follow-up Required
+**GET** `/api/attendance/follow-up?school=:id`
+
+### Get Student Attendance
+**GET** `/api/attendance/student/:studentId`
+
+---
+
+## Learning Assessments API ✅
+
+### Create Assessment
+**POST** `/api/assessments`
+
+**Request Body:**
+```json
+{
+  "student": "507f1f77bcf86cd799439011",
+  "school": "507f1f77bcf86cd799439012",
+  "literacyLevel": "meeting_benchmark",
+  "literacyScore": 75,
+  "numeracyLevel": "below_benchmark",
+  "numeracyScore": 45
+}
+```
+
+### Get Disaggregated Outcomes ⭐
+**GET** `/api/assessments/stats/disaggregated?school=:id`
+
+### Get Intervention Needed
+**GET** `/api/assessments/intervention-needed?school=:id`
+
+---
+
+## IVR Webhooks API ✅
+
+### Incoming Call
+**POST** `/api/ivr/incoming`
+
+### DTMF Input
+**POST** `/api/ivr/dtmf`
+
+### Call Status
+**POST** `/api/ivr/status`
+
+### Recording
+**POST** `/api/ivr/recording`
+
+---
+
+## AI/ML API ✅
+
+Base URL: `http://localhost:5001/ai`
+
+### Detect Language
+**POST** `/ai/detect-language`
+
+**Request Body:**
+```json
+{
+  "text": "Meda wo akye",
+  "phone": "+233241234567",
+  "region": "Ashanti"
+}
+```
+
+**Response:**
+```json
+{
+  "language": "Twi",
+  "confidence": 0.92,
+  "method": "combined"
+}
+```
+
+### Score Risk
+**POST** `/ai/score-risk`
+
+**Request Body:**
+```json
+{
+  "features": {
+    "absences30Days": 12,
+    "attendanceRate30Days": 60,
+    "literacyLevel": "below_benchmark",
+    "contactVerified": false
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "riskScore": 0.68,
+  "riskLevel": "high",
+  "recommendations": ["Parent Engagement Call", "Home Visit"]
+}
+```
+
+### Get Recommendations
+**POST** `/ai/recommendations`
+
+**Request Body:**
+```json
+{
+  "studentData": {...},
+  "riskAssessment": {...},
+  "budget": "medium"
+}
+```
 
 ---
 
