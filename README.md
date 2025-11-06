@@ -9,6 +9,7 @@
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://python.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-5.0+-green.svg)](https://mongodb.com/)
 [![Status](https://img.shields.io/badge/Status-Production%20Ready-success.svg)]()
+[![GitHub](https://img.shields.io/badge/GitHub-griddevconnect-blue.svg)](https://github.com/griddevconnet/EduLink-Ghana)
 
 **🏆 UNICEF Challenge Compliance: 100%**  
 **📊 Total Endpoints: 53 (48 Backend + 5 AI)**  
