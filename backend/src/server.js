@@ -41,40 +41,47 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API routes (will be added in Phase 3)
+// API routes
 app.get('/api', (req, res) => {
   res.json({
     message: 'EduLink Ghana API',
     version: '1.0.0',
     documentation: '/api/docs',
+    endpoints: {
+      auth: '/api/auth',
+      students: '/api/students',
+      schools: '/api/schools',
+      attendance: '/api/attendance',
+      calls: '/api/calls',
+      analytics: '/api/analytics',
+    },
   });
 });
 
-// TODO: Import and use route modules
-// app.use('/api/auth', require('./routes/auth'));
-// app.use('/api/students', require('./routes/students'));
-// app.use('/api/schools', require('./routes/schools'));
-// app.use('/api/attendance', require('./routes/attendance'));
-// app.use('/api/calls', require('./routes/calls'));
-// app.use('/api/analytics', require('./routes/analytics'));
+// Import route modules
+const authRoutes = require('./routes/auth');
+// const studentRoutes = require('./routes/students');
+// const schoolRoutes = require('./routes/schools');
+// const attendanceRoutes = require('./routes/attendance');
+// const callRoutes = require('./routes/calls');
+// const analyticsRoutes = require('./routes/analytics');
+
+// Use route modules
+app.use('/api/auth', authRoutes);
+// app.use('/api/students', studentRoutes);
+// app.use('/api/schools', schoolRoutes);
+// app.use('/api/attendance', attendanceRoutes);
+// app.use('/api/calls', callRoutes);
+// app.use('/api/analytics', analyticsRoutes);
+
+// Import error handlers
+const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 // 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    error: 'Not Found',
-    message: `Route ${req.method} ${req.path} not found`,
-  });
-});
+app.use(notFound);
 
 // Global error handler
-app.use((err, req, res, next) => {
-  logger.error('Unhandled error:', err);
-  
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
-  });
-});
+app.use(errorHandler);
 
 // Connect to database and start server
 const PORT = process.env.PORT || 5000;
