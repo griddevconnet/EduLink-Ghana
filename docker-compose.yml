@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # MongoDB
+  mongodb:
+    image: mongo:7.0
+    container_name: edulink-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: edulink2025
+      MONGO_INITDB_DATABASE: edulink
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - edulink-network
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: edulink-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass edulink2025
+    volumes:
+      - redis_data:/data
+    networks:
+      - edulink-network
+
+  # Backend (Node.js) - Uncomment when ready
+  # backend:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   container_name: edulink-backend
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5000:5000"
+  #   environment:
+  #     NODE_ENV: development
+  #     MONGODB_URI: mongodb://admin:edulink2025@mongodb:27017/edulink?authSource=admin
+  #     REDIS_URL: redis://:edulink2025@redis:6379
+  #   depends_on:
+  #     - mongodb
+  #     - redis
+  #   volumes:
+  #     - ./backend:/app
+  #     - /app/node_modules
+  #   networks:
+  #     - edulink-network
+
+  # AI Service (Flask) - Uncomment when ready
+  # ai-service:
+  #   build:
+  #     context: ./ai-service
+  #     dockerfile: Dockerfile
+  #   container_name: edulink-ai-service
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5001:5001"
+  #   environment:
+  #     FLASK_ENV: development
+  #     MONGODB_URI: mongodb://admin:edulink2025@mongodb:27017/edulink?authSource=admin
+  #     REDIS_URL: redis://:edulink2025@redis:6379
+  #   depends_on:
+  #     - mongodb
+  #     - redis
+  #   volumes:
+  #     - ./ai-service:/app
+  #   networks:
+  #     - edulink-network
+
+volumes:
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  edulink-network:
+    driver: bridge
