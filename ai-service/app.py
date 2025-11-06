@@ -6,6 +6,11 @@ from dotenv import load_dotenv
 from pymongo import MongoClient
 import redis
 
+# Import AI services
+from services.language_detector import get_detector
+from services.risk_scorer import get_scorer
+from services.recommender import get_recommender
+
 # Load environment variables
 load_dotenv()
 
@@ -63,162 +68,140 @@ def root():
         }
     }), 200
 
-# Language detection endpoint (placeholder)
+# Language detection endpoint
 @app.route('/ai/detect-language', methods=['POST'])
 def detect_language():
     """
-    Detect language from audio file
-    Expected: multipart/form-data with 'audio' file
+    Detect language from text, phone, or region
+    Expected JSON: { text, phone, region }
     Returns: detected language and confidence
     """
     try:
-        if 'audio' not in request.files:
-            return jsonify({'error': 'No audio file provided'}), 400
+        data = request.json or {}
+        text = data.get('text')
+        phone = data.get('phone')
+        region = data.get('region')
         
-        audio_file = request.files['audio']
+        if not any([text, phone, region]):
+            return jsonify({'error': 'At least one of text, phone, or region is required'}), 400
         
-        # TODO: Implement actual language detection model
-        # For MVP, we'll use phone prefix fallback
-        phone_prefix = request.form.get('phone_prefix', '')
+        detector = get_detector()
+        result = detector.detect_combined(text=text, phone=phone, region=region)
         
-        # Simple phone prefix to language mapping (Ghana)
-        language_map = {
-            '233': 'en',  # Default to English
-            '23320': 'tw',  # Twi (Ashanti region)
-            '23324': 'tw',  # Twi (Brong Ahafo)
-            '23327': 'ee',  # Ewe (Volta region)
-            '23337': 'dag', # Dagbani (Northern region)
-            '23330': 'ga',  # Ga (Greater Accra)
-        }
+        logger.info(f'Language detected: {result["language"]} (confidence: {result["confidence"]})')
         
-        detected_language = language_map.get(phone_prefix[:5], 'en')
-        
-        logger.info(f'Language detected: {detected_language} (phone prefix: {phone_prefix})')
-        
-        return jsonify({
-            'language': detected_language,
-            'confidence': 0.85,  # Placeholder confidence
-            'method': 'phone_prefix_fallback',
-            'note': 'Using phone prefix for MVP. ML model will be trained with pilot data.'
-        }), 200
+        return jsonify(result), 200
         
     except Exception as e:
         logger.error(f'Language detection error: {e}')
         return jsonify({'error': str(e)}), 500
 
-# Risk scoring endpoint (placeholder)
+# Risk scoring endpoint
 @app.route('/ai/score-risk', methods=['POST'])
 def score_risk():
     """
     Calculate dropout risk score for a student
-    Expected JSON: { student_id, features: {...} }
-    Returns: risk_score (0-1) and explanation
+    Expected JSON: { features: {...} }
+    Returns: risk assessment with score, level, and recommendations
     """
     try:
-        data = request.json
-        student_id = data.get('student_id')
+        data = request.json or {}
         features = data.get('features', {})
         
-        if not student_id:
-            return jsonify({'error': 'student_id is required'}), 400
+        if not features:
+            return jsonify({'error': 'features object is required'}), 400
         
-        # TODO: Implement actual ML risk scoring model
-        # For MVP, use rule-based scoring
+        scorer = get_scorer()
+        result = scorer.calculate_risk_score(features)
         
-        absences_30d = features.get('absences_30d', 0)
-        contact_verified = features.get('contact_verified', False)
-        learning_score = features.get('learning_score', 0.5)
+        logger.info(f'Risk score calculated: {result["riskScore"]} ({result["riskLevel"]})')
         
-        # Simple rule-based risk calculation
-        risk_score = 0.0
-        
-        # High absences increase risk
-        if absences_30d > 10:
-            risk_score += 0.4
-        elif absences_30d > 5:
-            risk_score += 0.2
-        
-        # Unverified contact increases risk
-        if not contact_verified:
-            risk_score += 0.2
-        
-        # Low learning scores increase risk
-        if learning_score < 0.3:
-            risk_score += 0.3
-        elif learning_score < 0.5:
-            risk_score += 0.15
-        
-        risk_score = min(risk_score, 1.0)  # Cap at 1.0
-        
-        explanation = []
-        if absences_30d > 5:
-            explanation.append(f'High absence rate: {absences_30d} days in last 30 days')
-        if not contact_verified:
-            explanation.append('Parent contact not verified')
-        if learning_score < 0.5:
-            explanation.append('Below-average learning assessment scores')
-        
-        logger.info(f'Risk score calculated for student {student_id}: {risk_score}')
-        
-        return jsonify({
-            'student_id': student_id,
-            'risk_score': round(risk_score, 2),
-            'risk_level': 'high' if risk_score > 0.6 else 'medium' if risk_score > 0.3 else 'low',
-            'explanation': explanation,
-            'method': 'rule_based',
-            'note': 'Using rule-based scoring for MVP. ML model will be trained with pilot data.'
-        }), 200
+        return jsonify(result), 200
         
     except Exception as e:
         logger.error(f'Risk scoring error: {e}')
         return jsonify({'error': str(e)}), 500
 
-# Recommendations endpoint (placeholder)
-@app.route('/ai/recommendations/<student_id>', methods=['GET'])
-def get_recommendations(student_id):
+# Batch risk scoring endpoint
+@app.route('/ai/score-risk/batch', methods=['POST'])
+def score_risk_batch():
     """
-    Get learning strategy recommendations for a student
-    Returns: list of recommended interventions
+    Calculate risk scores for multiple students
+    Expected JSON: { students: [{features: {...}}, ...] }
+    Returns: list of risk assessments
     """
     try:
-        # TODO: Implement actual recommendation engine
-        # For MVP, return template-based recommendations
+        data = request.json or {}
+        students = data.get('students', [])
         
-        recommendations = [
-            {
-                'type': 'parent_engagement',
-                'title': 'Increase Parent Communication',
-                'description': 'Schedule weekly voice calls to parents in their local language',
-                'priority': 'high',
-                'delivery_method': 'voice_call'
-            },
-            {
-                'type': 'learning_support',
-                'title': 'Literacy Practice',
-                'description': 'Provide read-aloud exercises and simple reading materials',
-                'priority': 'medium',
-                'delivery_method': 'sms'
-            },
-            {
-                'type': 'attendance_monitoring',
-                'title': 'Daily Attendance Check',
-                'description': 'Enable daily attendance alerts for this student',
-                'priority': 'high',
-                'delivery_method': 'system'
-            }
-        ]
+        if not students:
+            return jsonify({'error': 'students array is required'}), 400
         
-        logger.info(f'Recommendations generated for student {student_id}')
+        scorer = get_scorer()
+        results = scorer.batch_calculate(students)
         
-        return jsonify({
-            'student_id': student_id,
-            'recommendations': recommendations,
-            'generated_at': '2025-11-06T00:00:00Z',
-            'note': 'Using template-based recommendations for MVP. ML model will be trained with pilot data.'
-        }), 200
+        logger.info(f'Batch risk scoring completed for {len(results)} students')
+        
+        return jsonify({'results': results}), 200
+        
+    except Exception as e:
+        logger.error(f'Batch risk scoring error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+# Recommendations endpoint
+@app.route('/ai/recommendations', methods=['POST'])
+def get_recommendations():
+    """
+    Get personalized recommendations for a student
+    Expected JSON: { studentData: {...}, riskAssessment: {...}, budget: 'low|medium|high' }
+    Returns: personalized intervention recommendations
+    """
+    try:
+        data = request.json or {}
+        student_data = data.get('studentData', {})
+        risk_assessment = data.get('riskAssessment', {})
+        budget = data.get('budget', 'medium')
+        
+        if not student_data or not risk_assessment:
+            return jsonify({'error': 'studentData and riskAssessment are required'}), 400
+        
+        recommender = get_recommender()
+        result = recommender.recommend_for_student(student_data, risk_assessment, budget)
+        
+        logger.info(f'Recommendations generated for student {student_data.get("_id")}')
+        
+        return jsonify(result), 200
         
     except Exception as e:
         logger.error(f'Recommendations error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+# School recommendations endpoint
+@app.route('/ai/recommendations/school', methods=['POST'])
+def get_school_recommendations():
+    """
+    Get school-level recommendations
+    Expected JSON: { schoolData: {...}, studentRisks: [...], budget: 10000 }
+    Returns: school-level intervention recommendations
+    """
+    try:
+        data = request.json or {}
+        school_data = data.get('schoolData', {})
+        student_risks = data.get('studentRisks', [])
+        budget = data.get('budget', 0)
+        
+        if not school_data or not student_risks:
+            return jsonify({'error': 'schoolData and studentRisks are required'}), 400
+        
+        recommender = get_recommender()
+        result = recommender.recommend_for_school(school_data, student_risks, budget)
+        
+        logger.info(f'School recommendations generated for {school_data.get("name")}')
+        
+        return jsonify(result), 200
+        
+    except Exception as e:
+        logger.error(f'School recommendations error: {e}')
         return jsonify({'error': str(e)}), 500
 
 # Error handlers
