@@ -64,6 +64,7 @@ const schoolRoutes = require('./routes/schools');
 const studentRoutes = require('./routes/students');
 const attendanceRoutes = require('./routes/attendance');
 const assessmentRoutes = require('./routes/assessments');
+const ivrRoutes = require('./routes/ivr');
 // const callRoutes = require('./routes/calls');
 // const analyticsRoutes = require('./routes/analytics');
 
@@ -73,6 +74,7 @@ app.use('/api/schools', schoolRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/assessments', assessmentRoutes);
+app.use('/api/ivr', ivrRoutes);
 // app.use('/api/calls', callRoutes);
 // app.use('/api/analytics', analyticsRoutes);
 
@@ -93,11 +95,20 @@ const startServer = async () => {
     // Connect to MongoDB
     await connectDB();
     
+    // Initialize call queue (optional - only if Redis is available)
+    try {
+      require('./jobs/callQueue');
+      logger.info('📞 Call queue initialized');
+    } catch (error) {
+      logger.warn('Call queue not initialized (Redis may not be available):', error.message);
+    }
+    
     // Start Express server
     app.listen(PORT, () => {
       logger.info(`🚀 EduLink Backend running on port ${PORT}`);
       logger.info(`📍 Environment: ${process.env.NODE_ENV}`);
       logger.info(`🔗 Health check: http://localhost:${PORT}/health`);
+      logger.info(`📞 IVR webhooks: http://localhost:${PORT}/api/ivr`);
     });
   } catch (error) {
     logger.error('Failed to start server:', error);
