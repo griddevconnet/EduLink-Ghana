@@ -60,16 +60,16 @@ app.get('/api', (req, res) => {
 
 // Import route modules
 const authRoutes = require('./routes/auth');
-// const studentRoutes = require('./routes/students');
-// const schoolRoutes = require('./routes/schools');
+const schoolRoutes = require('./routes/schools');
+const studentRoutes = require('./routes/students');
 // const attendanceRoutes = require('./routes/attendance');
 // const callRoutes = require('./routes/calls');
 // const analyticsRoutes = require('./routes/analytics');
 
 // Use route modules
 app.use('/api/auth', authRoutes);
-// app.use('/api/students', studentRoutes);
-// app.use('/api/schools', schoolRoutes);
+app.use('/api/schools', schoolRoutes);
+app.use('/api/students', studentRoutes);
 // app.use('/api/attendance', attendanceRoutes);
 // app.use('/api/calls', callRoutes);
 // app.use('/api/analytics', analyticsRoutes);
