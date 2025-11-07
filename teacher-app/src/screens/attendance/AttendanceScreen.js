@@ -181,6 +181,26 @@ export default function AttendanceScreen({ navigation }) {
         return;
       }
       
+      // Check if backend user has school association
+      if (!profileResponse.data?.user?.school) {
+        console.log('❌ Backend user has no school! Frontend has school but backend is missing.');
+        console.log('🔧 Attempting to fix school association...');
+        
+        try {
+          const { authAPI } = require('../../services/api');
+          const updateResponse = await authAPI.updateProfile({
+            school: schoolId
+          });
+          console.log('✅ School association updated:', updateResponse.data);
+          Alert.alert('Fixed', 'School association has been updated. Please try again.');
+          return;
+        } catch (updateError) {
+          console.log('❌ Failed to update school association:', updateError.message);
+          Alert.alert('Error', 'Failed to fix school association. Please contact support.');
+          return;
+        }
+      }
+      
       const testData = {
         school: schoolId,
         date: selectedDate,
