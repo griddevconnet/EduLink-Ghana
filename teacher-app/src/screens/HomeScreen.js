@@ -253,7 +253,7 @@ export default function HomeScreen({ navigation }) {
                 colors={['#1CABE2', '#0E8FC7']}
                 style={styles.actionGradient}
               >
-                <MaterialCommunityIcons name="clipboard-check" size={32} color="#FFFFFF" />
+                <MaterialCommunityIcons name="clipboard-check" size={28} color="#FFFFFF" />
                 <Text style={styles.actionText}>Mark{"\n"}Attendance</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -266,7 +266,7 @@ export default function HomeScreen({ navigation }) {
                 colors={['#374785', '#2A3660']}
                 style={styles.actionGradient}
               >
-                <MaterialCommunityIcons name="account-group" size={32} color="#FFFFFF" />
+                <MaterialCommunityIcons name="account-group" size={28} color="#FFFFFF" />
                 <Text style={styles.actionText}>View{"\n"}Students</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -279,7 +279,7 @@ export default function HomeScreen({ navigation }) {
                 colors={['#4CAF50', '#388E3C']}
                 style={styles.actionGradient}
               >
-                <MaterialCommunityIcons name="chart-bar" size={32} color="#FFFFFF" />
+                <MaterialCommunityIcons name="chart-bar" size={28} color="#FFFFFF" />
                 <Text style={styles.actionText}>View{"\n"}Reports</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -292,7 +292,7 @@ export default function HomeScreen({ navigation }) {
                 colors={['#FF9800', '#F57C00']}
                 style={styles.actionGradient}
               >
-                <MaterialCommunityIcons name="phone" size={32} color="#FFFFFF" />
+                <MaterialCommunityIcons name="phone" size={28} color="#FFFFFF" />
                 <Text style={styles.actionText}>Parent{"\n"}Calls</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -460,22 +460,22 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     width: (width - 50) / 2,
-    marginBottom: 15,
-    borderRadius: 15,
+    marginBottom: 12,
+    borderRadius: 12,
     overflow: 'hidden',
     elevation: 4,
   },
   actionGradient: {
-    padding: 20,
+    padding: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 120,
+    minHeight: 90,
   },
   actionText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
-    marginTop: 10,
+    marginTop: 8,
     textAlign: 'center',
   },
   activityCard: {
