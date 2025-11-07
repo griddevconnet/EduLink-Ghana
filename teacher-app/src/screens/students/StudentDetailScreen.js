@@ -44,6 +44,7 @@ export default function StudentDetailScreen({ route, navigation }) {
   const loadStudentDetails = async () => {
     try {
       setLoading(true);
+      console.log('Loading student details for ID:', studentId);
       
       // Load student details
       const studentResponse = await studentAPI.getById(studentId);
@@ -74,8 +75,20 @@ export default function StudentDetailScreen({ route, navigation }) {
 
     } catch (error) {
       console.error('Error loading student details:', error);
-      Alert.alert('Error', 'Failed to load student details');
-      navigation.goBack();
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
+      let errorMessage = 'Failed to load student details';
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      }
+      
+      Alert.alert('Error', errorMessage, [
+        { text: 'Go Back', onPress: () => navigation.goBack() },
+        { text: 'Retry', onPress: () => loadStudentDetails() }
+      ]);
     } finally {
       setLoading(false);
     }

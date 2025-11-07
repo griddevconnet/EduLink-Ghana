@@ -76,7 +76,7 @@ export default function StudentsScreen({ navigation }) {
 
   const renderStudent = ({ item }) => (
     <TouchableOpacity
-      onPress={() => navigation.navigate('StudentDetail', { student: item })}
+      onPress={() => navigation.navigate('StudentDetail', { studentId: item._id, student: item })}
     >
       <Card style={styles.studentCard}>
         <View style={styles.studentContent}>
