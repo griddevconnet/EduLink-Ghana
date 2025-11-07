@@ -9,6 +9,7 @@ import {
   TextInput,
   StatusBar,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { Card, ActivityIndicator, FAB, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -74,6 +75,51 @@ export default function StudentsScreen({ navigation }) {
     return '#9C27B0';
   };
 
+  const handleDeleteStudent = (student) => {
+    Alert.alert(
+      'Delete Student',
+      `Are you sure you want to delete ${student.firstName} ${student.lastName}? This action cannot be undone.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => confirmDeleteStudent(student),
+        },
+      ]
+    );
+  };
+
+  const confirmDeleteStudent = async (student) => {
+    try {
+      setLoading(true);
+      
+      // Call API to delete student
+      await studentAPI.delete(student._id);
+      
+      // Remove student from local state
+      setStudents(prevStudents => 
+        prevStudents.filter(s => s._id !== student._id)
+      );
+      
+      Alert.alert(
+        'Success',
+        `${student.firstName} ${student.lastName} has been deleted successfully.`
+      );
+    } catch (error) {
+      console.error('Error deleting student:', error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to delete student. Please try again.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderStudent = ({ item }) => (
     <TouchableOpacity
       onPress={() => navigation.navigate('StudentDetail', { studentId: item._id, student: item })}
@@ -117,7 +163,18 @@ export default function StudentsScreen({ navigation }) {
             >
               {item.enrollmentStatus === 'enrolled' ? 'Enrolled' : 'Dropped'}
             </Chip>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#9CA3AF" />
+            <View style={styles.actionButtons}>
+              <TouchableOpacity
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handleDeleteStudent(item);
+                }}
+                style={styles.deleteButton}
+              >
+                <MaterialCommunityIcons name="delete" size={20} color="#F44336" />
+              </TouchableOpacity>
+              <MaterialCommunityIcons name="chevron-right" size={24} color="#9CA3AF" />
+            </View>
           </View>
         </View>
       </Card>
@@ -400,5 +457,15 @@ const styles = StyleSheet.create({
     right: 20,
     bottom: 90,
     backgroundColor: '#1CABE2',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  deleteButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(244, 67, 54, 0.1)',
   },
 });

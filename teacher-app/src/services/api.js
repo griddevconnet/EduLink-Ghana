@@ -85,6 +85,9 @@ export const studentAPI = {
   update: (id, studentData) =>
     api.put(`/api/students/${id}`, studentData),
   
+  delete: (id) =>
+    api.delete(`/api/students/${id}`),
+  
   getOutOfSchool: (params) =>
     api.get('/api/students/out-of-school', { params }),
   

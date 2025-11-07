@@ -191,8 +191,8 @@ router.post(
 /**
  * @route   DELETE /api/students/:id
  * @desc    Delete student (soft delete)
- * @access  Admin only
+ * @access  Teacher, Headteacher, Admin
  */
-router.delete('/:id', requirePermission('admin'), studentController.deleteStudent);
+router.delete('/:id', requirePermission('teacher'), studentController.deleteStudent);
 
 module.exports = router;

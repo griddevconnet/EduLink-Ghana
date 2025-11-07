@@ -371,10 +371,22 @@ const updateStudent = async (req, res, next) => {
  */
 const deleteStudent = async (req, res, next) => {
   try {
-    const student = await Student.findById(req.params.id);
+    const student = await Student.findById(req.params.id)
+      .populate('school', 'name region district');
     
     if (!student) {
       return notFound(res, 'Student not found');
+    }
+    
+    // Check access for teachers - same logic as getStudent
+    if (['teacher', 'headteacher'].includes(req.user.role)) {
+      const hasSchoolAccess = !student.school || 
+                             (req.user.school && student.school?._id.toString() === req.user.school.toString());
+      const isRegisteredByTeacher = student.registeredBy?.toString() === req.user._id.toString();
+      
+      if (!hasSchoolAccess && !isRegisteredByTeacher) {
+        return forbidden(res, 'Access denied to delete this student');
+      }
     }
     
     student.active = false;
