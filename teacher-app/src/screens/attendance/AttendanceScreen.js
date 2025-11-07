@@ -22,11 +22,13 @@ import {
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '../../context/AuthContext';
 import { studentAPI, attendanceAPI } from '../../services/api';
 
 const { width } = Dimensions.get('window');
 
 export default function AttendanceScreen({ navigation }) {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState([]);
   const [attendanceData, setAttendanceData] = useState({});
@@ -142,14 +144,21 @@ export default function AttendanceScreen({ navigation }) {
       
       // Second test: Try to submit attendance
       console.log('🧪 Step 2: Testing attendance POST endpoint...');
-      const testData = [{
-        student: students[0]?._id || 'test-student-id',
+      
+      // Get user's school ID (required by backend)
+      const schoolId = user?.school?._id || user?.school;
+      
+      const testData = {
+        school: schoolId,
         date: selectedDate,
-        status: 'present',
-        markedBy: 'teacher'
-      }];
+        records: [{
+          student: students[0]?._id || 'test-student-id',
+          status: 'present'
+        }]
+      };
       
       console.log('🧪 Test data:', testData);
+      console.log('🧪 School ID:', schoolId);
       console.log('🧪 Making test API call to bulk mark...');
       
       const response = await attendanceAPI.bulkMark(testData);
@@ -163,7 +172,14 @@ export default function AttendanceScreen({ navigation }) {
       console.error('🧪 Test error response:', error.response?.data);
       console.error('🧪 Test error status:', error.response?.status);
       console.error('🧪 Test error config:', error.config);
-      Alert.alert('Test Failed', `Backend test failed: ${error.message}`);
+      console.error('🧪 Full error object:', JSON.stringify(error.response, null, 2));
+      
+      // Show detailed error info
+      const errorDetails = error.response?.data?.details || error.response?.data?.message || error.message;
+      Alert.alert(
+        'Test Failed', 
+        `Backend test failed: ${error.message}\n\nDetails: ${JSON.stringify(errorDetails, null, 2)}`
+      );
     }
   };
 
@@ -176,18 +192,25 @@ export default function AttendanceScreen({ navigation }) {
       console.log('Students count:', students.length);
       console.log('Attendance data state:', attendanceData);
       
-      const attendanceArray = students.map(student => ({
+      const schoolId = user?.school?._id || user?.school;
+      const attendanceRecords = students.map(student => ({
         student: student._id,
-        date: selectedDate,
         status: attendanceData[student._id] || 'absent',
-        markedBy: 'teacher', // This will be set by backend based on auth
       }));
 
-      console.log('Attendance array to submit:', attendanceArray);
-      console.log('Present count in submission:', attendanceArray.filter(a => a.status === 'present').length);
-      console.log('Absent count in submission:', attendanceArray.filter(a => a.status === 'absent').length);
+      const attendancePayload = {
+        school: schoolId,
+        date: selectedDate,
+        records: attendanceRecords
+      };
 
-      const response = await attendanceAPI.bulkMark(attendanceArray);
+      console.log('Attendance payload to submit:', attendancePayload);
+      console.log('School ID:', schoolId);
+      console.log('Records count:', attendanceRecords.length);
+      console.log('Present count in submission:', attendanceRecords.filter(a => a.status === 'present').length);
+      console.log('Absent count in submission:', attendanceRecords.filter(a => a.status === 'absent').length);
+
+      const response = await attendanceAPI.bulkMark(attendancePayload);
       console.log('Bulk mark response:', response);
       console.log('Attendance submission successful!');
       

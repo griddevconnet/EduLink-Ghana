@@ -132,8 +132,8 @@ export const attendanceAPI = {
   mark: (attendanceData) =>
     api.post('/api/attendance', attendanceData),
   
-  bulkMark: (attendanceArray) =>
-    api.post('/api/attendance/bulk', { attendance: attendanceArray }),
+  bulkMark: (attendanceData) =>
+    api.post('/api/attendance/bulk', attendanceData),
   
   getAttendance: (params) =>
     api.get('/api/attendance', { params }),
