@@ -1,9 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Card, Title, Paragraph, Button, ActivityIndicator } from 'react-native-paper';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  ScrollView, 
+  RefreshControl, 
+  TouchableOpacity,
+  Dimensions,
+  StatusBar,
+  Image,
+} from 'react-native';
+import { Card, ActivityIndicator, Avatar } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
 import { schoolAPI, studentAPI, attendanceAPI } from '../services/api';
+
+const { width } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }) {
   const { user } = useAuth();
@@ -14,7 +27,9 @@ export default function HomeScreen({ navigation }) {
     presentToday: 0,
     absentToday: 0,
     atRisk: 0,
+    attendanceRate: 0,
   });
+  const [recentActivity, setRecentActivity] = useState([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -22,16 +37,49 @@ export default function HomeScreen({ navigation }) {
 
   const loadDashboardData = async () => {
     try {
-      // Load dashboard statistics
-      // This is a placeholder - implement actual API calls
+      // Load dashboard statistics from backend
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Get students count
+      const studentsResponse = await studentAPI.getStudents({ limit: 1 });
+      const totalStudents = studentsResponse.data?.pagination?.total || 0;
+      
+      // Get today's attendance
+      const attendanceResponse = await attendanceAPI.getAttendance({ date: today });
+      const attendanceData = attendanceResponse.data?.data || [];
+      
+      const presentToday = attendanceData.filter(a => a.status === 'present').length;
+      const absentToday = attendanceData.filter(a => a.status === 'absent').length;
+      const attendanceRate = totalStudents > 0 ? Math.round((presentToday / totalStudents) * 100) : 0;
+      
+      // Get at-risk students (those with low attendance)
+      const atRiskResponse = await studentAPI.getAtRiskStudents();
+      const atRisk = atRiskResponse.data?.data?.length || 0;
+      
       setStats({
-        totalStudents: 45,
-        presentToday: 38,
-        absentToday: 7,
-        atRisk: 5,
+        totalStudents,
+        presentToday,
+        absentToday,
+        atRisk,
+        attendanceRate,
       });
+      
+      // Set recent activity
+      setRecentActivity([
+        { icon: 'check-circle', text: `${presentToday} students marked present today`, time: 'Today', color: '#4CAF50' },
+        { icon: 'alert-circle', text: `${absentToday} students absent`, time: 'Today', color: '#FF9800' },
+        { icon: 'account-alert', text: `${atRisk} students at risk`, time: 'This week', color: '#F44336' },
+      ]);
     } catch (error) {
       console.error('Error loading dashboard:', error);
+      // Use fallback data if API fails
+      setStats({
+        totalStudents: 0,
+        presentToday: 0,
+        absentToday: 0,
+        atRisk: 0,
+        attendanceRate: 0,
+      });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -46,87 +94,205 @@ export default function HomeScreen({ navigation }) {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4CAF50" />
+        <ActivityIndicator size="large" color="#1CABE2" />
       </View>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      <Card style={styles.welcomeCard}>
-        <Card.Content>
-          <Title>Welcome back, {user?.firstName}! 👋</Title>
-          <Paragraph>
-            {user?.school?.name || 'EduLink Teacher'}
-          </Paragraph>
-        </Card.Content>
-      </Card>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#1CABE2" />
+      
+      {/* Header with Gradient */}
+      <LinearGradient
+        colors={['#1CABE2', '#374785']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            <Avatar.Text 
+              size={50} 
+              label={user?.firstName?.charAt(0) || 'T'} 
+              style={styles.avatar}
+              color="#1CABE2"
+            />
+            <View style={styles.headerText}>
+              <Text style={styles.greeting}>Welcome back,</Text>
+              <Text style={styles.userName}>{user?.firstName || 'Teacher'}! 👋</Text>
+              <Text style={styles.schoolName}>{user?.school?.name || 'EduLink Ghana'}</Text>
+            </View>
+          </View>
+          <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+            <MaterialCommunityIcons name="cog" size={28} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
 
-      <View style={styles.statsGrid}>
-        <Card style={[styles.statCard, styles.primaryCard]}>
-          <Card.Content style={styles.statContent}>
-            <MaterialCommunityIcons name="account-group" size={40} color="#4CAF50" />
-            <Title style={styles.statNumber}>{stats.totalStudents}</Title>
-            <Paragraph>Total Students</Paragraph>
-          </Card.Content>
-        </Card>
-
-        <Card style={[styles.statCard, styles.successCard]}>
-          <Card.Content style={styles.statContent}>
-            <MaterialCommunityIcons name="check-circle" size={40} color="#4CAF50" />
-            <Title style={styles.statNumber}>{stats.presentToday}</Title>
-            <Paragraph>Present Today</Paragraph>
-          </Card.Content>
-        </Card>
-
-        <Card style={[styles.statCard, styles.warningCard]}>
-          <Card.Content style={styles.statContent}>
-            <MaterialCommunityIcons name="alert-circle" size={40} color="#FF9800" />
-            <Title style={styles.statNumber}>{stats.absentToday}</Title>
-            <Paragraph>Absent Today</Paragraph>
-          </Card.Content>
-        </Card>
-
-        <Card style={[styles.statCard, styles.dangerCard]}>
-          <Card.Content style={styles.statContent}>
-            <MaterialCommunityIcons name="alert" size={40} color="#F44336" />
-            <Title style={styles.statNumber}>{stats.atRisk}</Title>
-            <Paragraph>At Risk</Paragraph>
-          </Card.Content>
-        </Card>
-      </View>
-
-      <Card style={styles.actionCard}>
-        <Card.Content>
-          <Title>Quick Actions</Title>
-        </Card.Content>
-        <Card.Actions>
-          <Button
-            mode="contained"
-            icon="clipboard-check"
-            onPress={() => navigation.navigate('Attendance')}
-            style={styles.actionButton}
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            colors={['#1CABE2']}
+            tintColor="#1CABE2"
+          />
+        }
+      >
+        {/* Attendance Rate Card */}
+        <Card style={styles.attendanceCard}>
+          <LinearGradient
+            colors={['#1CABE2', '#0E8FC7']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.attendanceGradient}
           >
-            Mark Attendance
-          </Button>
-        </Card.Actions>
-        <Card.Actions>
-          <Button
-            mode="outlined"
-            icon="account-group"
+            <View style={styles.attendanceContent}>
+              <View>
+                <Text style={styles.attendanceLabel}>Today's Attendance</Text>
+                <Text style={styles.attendanceRate}>{stats.attendanceRate}%</Text>
+                <Text style={styles.attendanceSubtext}>
+                  {stats.presentToday} of {stats.totalStudents} students
+                </Text>
+              </View>
+              <MaterialCommunityIcons name="chart-donut" size={80} color="rgba(255,255,255,0.3)" />
+            </View>
+          </LinearGradient>
+        </Card>
+
+        {/* Stats Grid */}
+        <View style={styles.statsGrid}>
+          <TouchableOpacity 
+            style={[styles.statCard, { backgroundColor: '#E3F2FD' }]}
             onPress={() => navigation.navigate('Students')}
-            style={styles.actionButton}
           >
-            View Students
-          </Button>
-        </Card.Actions>
-      </Card>
-    </ScrollView>
+            <View style={styles.statIconContainer}>
+              <MaterialCommunityIcons name="account-group" size={32} color="#1976D2" />
+            </View>
+            <Text style={styles.statNumber}>{stats.totalStudents}</Text>
+            <Text style={styles.statLabel}>Total Students</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.statCard, { backgroundColor: '#E8F5E9' }]}
+            onPress={() => navigation.navigate('Attendance')}
+          >
+            <View style={styles.statIconContainer}>
+              <MaterialCommunityIcons name="check-circle" size={32} color="#4CAF50" />
+            </View>
+            <Text style={styles.statNumber}>{stats.presentToday}</Text>
+            <Text style={styles.statLabel}>Present Today</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.statCard, { backgroundColor: '#FFF3E0' }]}
+            onPress={() => navigation.navigate('Attendance')}
+          >
+            <View style={styles.statIconContainer}>
+              <MaterialCommunityIcons name="alert-circle" size={32} color="#FF9800" />
+            </View>
+            <Text style={styles.statNumber}>{stats.absentToday}</Text>
+            <Text style={styles.statLabel}>Absent Today</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.statCard, { backgroundColor: '#FFEBEE' }]}
+            onPress={() => navigation.navigate('Students', { filter: 'atRisk' })}
+          >
+            <View style={styles.statIconContainer}>
+              <MaterialCommunityIcons name="alert" size={32} color="#F44336" />
+            </View>
+            <Text style={styles.statNumber}>{stats.atRisk}</Text>
+            <Text style={styles.statLabel}>At Risk</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Quick Actions */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <View style={styles.actionsGrid}>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => navigation.navigate('Attendance')}
+            >
+              <LinearGradient
+                colors={['#1CABE2', '#0E8FC7']}
+                style={styles.actionGradient}
+              >
+                <MaterialCommunityIcons name="clipboard-check" size={32} color="#FFFFFF" />
+                <Text style={styles.actionText}>Mark{"\n"}Attendance</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => navigation.navigate('Students')}
+            >
+              <LinearGradient
+                colors={['#374785', '#2A3660']}
+                style={styles.actionGradient}
+              >
+                <MaterialCommunityIcons name="account-group" size={32} color="#FFFFFF" />
+                <Text style={styles.actionText}>View{"\n"}Students</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => navigation.navigate('Reports')}
+            >
+              <LinearGradient
+                colors={['#4CAF50', '#388E3C']}
+                style={styles.actionGradient}
+              >
+                <MaterialCommunityIcons name="chart-bar" size={32} color="#FFFFFF" />
+                <Text style={styles.actionText}>View{"\n"}Reports</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => navigation.navigate('Calls')}
+            >
+              <LinearGradient
+                colors={['#FF9800', '#F57C00']}
+                style={styles.actionGradient}
+              >
+                <MaterialCommunityIcons name="phone" size={32} color="#FFFFFF" />
+                <Text style={styles.actionText}>Parent{"\n"}Calls</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Recent Activity */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Recent Activity</Text>
+          <Card style={styles.activityCard}>
+            {recentActivity.map((activity, index) => (
+              <View key={index} style={styles.activityItem}>
+                <View style={[styles.activityIcon, { backgroundColor: activity.color + '20' }]}>
+                  <MaterialCommunityIcons name={activity.icon} size={24} color={activity.color} />
+                </View>
+                <View style={styles.activityContent}>
+                  <Text style={styles.activityText}>{activity.text}</Text>
+                  <Text style={styles.activityTime}>{activity.time}</Text>
+                </View>
+              </View>
+            ))}
+          </Card>
+        </View>
+
+        {/* UNICEF Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Powered by UNICEF × Ministry of Education</Text>
+          <Text style={styles.footerSubtext}>Ghana 🇬🇭</Text>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -139,48 +305,195 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#F5F5F5',
   },
-  welcomeCard: {
+  header: {
+    paddingTop: 50,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  avatar: {
+    backgroundColor: '#FFFFFF',
+  },
+  headerText: {
+    marginLeft: 15,
+    flex: 1,
+  },
+  greeting: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    opacity: 0.9,
+  },
+  userName: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 2,
+  },
+  schoolName: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    opacity: 0.8,
+    marginTop: 2,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  attendanceCard: {
     margin: 15,
-    elevation: 4,
+    marginTop: -30,
+    borderRadius: 15,
+    elevation: 8,
+    overflow: 'hidden',
+  },
+  attendanceGradient: {
+    padding: 20,
+  },
+  attendanceContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  attendanceLabel: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    opacity: 0.9,
+  },
+  attendanceRate: {
+    color: '#FFFFFF',
+    fontSize: 48,
+    fontWeight: 'bold',
+    marginVertical: 5,
+  },
+  attendanceSubtext: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    opacity: 0.9,
   },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    padding: 10,
+    paddingHorizontal: 10,
+    marginTop: 10,
   },
   statCard: {
-    width: '47%',
-    margin: '1.5%',
-    elevation: 4,
-  },
-  statContent: {
+    width: (width - 50) / 2,
+    margin: 7.5,
+    padding: 20,
+    borderRadius: 15,
+    elevation: 3,
     alignItems: 'center',
-    paddingVertical: 15,
+  },
+  statIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   statNumber: {
     fontSize: 32,
     fontWeight: 'bold',
+    color: '#374785',
     marginVertical: 5,
   },
-  primaryCard: {
-    backgroundColor: '#E8F5E9',
+  statLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
   },
-  successCard: {
-    backgroundColor: '#E8F5E9',
+  section: {
+    paddingHorizontal: 15,
+    marginTop: 20,
   },
-  warningCard: {
-    backgroundColor: '#FFF3E0',
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#374785',
+    marginBottom: 15,
   },
-  dangerCard: {
-    backgroundColor: '#FFEBEE',
-  },
-  actionCard: {
-    margin: 15,
-    elevation: 4,
+  actionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   actionButton: {
+    width: (width - 50) / 2,
+    marginBottom: 15,
+    borderRadius: 15,
+    overflow: 'hidden',
+    elevation: 4,
+  },
+  actionGradient: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 120,
+  },
+  actionText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  activityCard: {
+    borderRadius: 15,
+    elevation: 3,
+    padding: 10,
+  },
+  activityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  activityIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  activityContent: {
     flex: 1,
-    marginHorizontal: 5,
+  },
+  activityText: {
+    fontSize: 14,
+    color: '#374785',
+    marginBottom: 4,
+  },
+  activityTime: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  footer: {
+    alignItems: 'center',
+    paddingVertical: 30,
+    marginTop: 20,
+  },
+  footerText: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 4,
+  },
+  footerSubtext: {
+    fontSize: 14,
+    color: '#374785',
+    fontWeight: '600',
   },
 });

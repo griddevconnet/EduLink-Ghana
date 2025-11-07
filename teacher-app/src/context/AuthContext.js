@@ -30,9 +30,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (email, password) => {
+  const login = async (phone, password) => {
     try {
-      const response = await authAPI.login(email, password);
+      const response = await authAPI.login(phone, password);
       const { token, user: userData } = response.data.data;
 
       // Save to storage
@@ -78,9 +78,21 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       console.error('Registration error:', error);
+      
+      // Extract detailed error message
+      let errorMessage = 'Registration failed';
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        // Validation errors from express-validator
+        errorMessage = error.response.data.errors.map(err => err.msg).join(', ');
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       return {
         success: false,
-        error: error.response?.data?.message || 'Registration failed',
+        error: errorMessage,
       };
     }
   };

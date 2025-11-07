@@ -8,7 +8,7 @@ const AI_URL = 'https://edulink-ai-service.onrender.com';
 // Create axios instance
 const api = axios.create({
   baseURL: BACKEND_URL,
-  timeout: 30000,
+  timeout: 60000, // Increased to 60 seconds for backend startup
   headers: {
     'Content-Type': 'application/json',
   },
@@ -43,8 +43,8 @@ api.interceptors.response.use(
 
 // Auth APIs
 export const authAPI = {
-  login: (email, password) =>
-    api.post('/api/auth/login', { email, password }),
+  login: (phone, password) =>
+    api.post('/api/auth/login', { phone, password }),
   
   register: (userData) =>
     api.post('/api/auth/register', userData),
@@ -67,6 +67,9 @@ export const schoolAPI = {
 
 // Student APIs
 export const studentAPI = {
+  getStudents: (params) =>
+    api.get('/api/students', { params }),
+  
   getAll: (params) =>
     api.get('/api/students', { params }),
   
@@ -81,6 +84,9 @@ export const studentAPI = {
   
   getOutOfSchool: (params) =>
     api.get('/api/students/out-of-school', { params }),
+  
+  getAtRiskStudents: (params) =>
+    api.get('/api/students/at-risk', { params }),
 };
 
 // Attendance APIs
@@ -90,6 +96,9 @@ export const attendanceAPI = {
   
   bulkMark: (attendanceArray) =>
     api.post('/api/attendance/bulk', { attendance: attendanceArray }),
+  
+  getAttendance: (params) =>
+    api.get('/api/attendance', { params }),
   
   getByStudent: (studentId, params) =>
     api.get(`/api/attendance/student/${studentId}`, { params }),
