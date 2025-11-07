@@ -201,7 +201,7 @@ export default function HomeScreen({ navigation }) {
             onPress={() => navigation.navigate('Students')}
           >
             <View style={styles.statIconContainer}>
-              <MaterialCommunityIcons name="account-group" size={26} color="#1976D2" />
+              <MaterialCommunityIcons name="account-group" size={22} color="#1976D2" />
             </View>
             <Text style={styles.statNumber}>{stats.totalStudents}</Text>
             <Text style={styles.statLabel}>Total Students</Text>
@@ -212,7 +212,7 @@ export default function HomeScreen({ navigation }) {
             onPress={() => navigation.navigate('Attendance')}
           >
             <View style={styles.statIconContainer}>
-              <MaterialCommunityIcons name="check-circle" size={26} color="#4CAF50" />
+              <MaterialCommunityIcons name="check-circle" size={22} color="#4CAF50" />
             </View>
             <Text style={styles.statNumber}>{stats.presentToday}</Text>
             <Text style={styles.statLabel}>Present Today</Text>
@@ -223,7 +223,7 @@ export default function HomeScreen({ navigation }) {
             onPress={() => navigation.navigate('Attendance')}
           >
             <View style={styles.statIconContainer}>
-              <MaterialCommunityIcons name="alert-circle" size={26} color="#FF9800" />
+              <MaterialCommunityIcons name="alert-circle" size={22} color="#FF9800" />
             </View>
             <Text style={styles.statNumber}>{stats.absentToday}</Text>
             <Text style={styles.statLabel}>Absent Today</Text>
@@ -234,7 +234,7 @@ export default function HomeScreen({ navigation }) {
             onPress={() => navigation.navigate('Students', { filter: 'atRisk' })}
           >
             <View style={styles.statIconContainer}>
-              <MaterialCommunityIcons name="alert" size={26} color="#F44336" />
+              <MaterialCommunityIcons name="alert" size={22} color="#F44336" />
             </View>
             <Text style={styles.statNumber}>{stats.atRisk}</Text>
             <Text style={styles.statLabel}>At Risk</Text>
@@ -418,28 +418,28 @@ const styles = StyleSheet.create({
   statCard: {
     width: (width - 50) / 2,
     margin: 7.5,
-    padding: 15,
-    borderRadius: 12,
+    padding: 12,
+    borderRadius: 10,
     elevation: 3,
     alignItems: 'center',
   },
   statIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: 'rgba(255,255,255,0.9)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   statNumber: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#374785',
-    marginVertical: 4,
+    marginVertical: 3,
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#6B7280',
     textAlign: 'center',
   },
