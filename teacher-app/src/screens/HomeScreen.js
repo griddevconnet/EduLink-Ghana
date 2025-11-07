@@ -105,6 +105,12 @@ export default function HomeScreen({ navigation }) {
                            attendanceResponse.data?.data || 
                            [];
         
+        console.log('🔍 Debugging attendance data extraction:');
+        console.log('Raw response data:', attendanceResponse.data);
+        console.log('attendanceResponse.data?.data?.attendance:', attendanceResponse.data?.data?.attendance);
+        console.log('attendanceResponse.data?.attendance:', attendanceResponse.data?.attendance);
+        console.log('attendanceResponse.data?.data:', attendanceResponse.data?.data);
+        
         console.log('Extracted attendance data:', attendanceData);
         console.log('Is attendance data an array?', Array.isArray(attendanceData));
         
@@ -143,6 +149,17 @@ export default function HomeScreen({ navigation }) {
             if (allAttendanceData.length > 0) {
               console.log('Sample attendance record:', allAttendanceData[0]);
               console.log('Date format in records:', allAttendanceData.map(a => a.date));
+              console.log('Date comparison:');
+              console.log('Query date:', today);
+              console.log('Record dates:', allAttendanceData.map(a => {
+                const recordDate = new Date(a.date);
+                return {
+                  original: a.date,
+                  toISOString: recordDate.toISOString(),
+                  toDateString: recordDate.toDateString(),
+                  formatted: recordDate.toISOString().split('T')[0]
+                };
+              }));
             }
           } catch (broadErr) {
             console.log('Could not fetch broader attendance data:', broadErr.message);
