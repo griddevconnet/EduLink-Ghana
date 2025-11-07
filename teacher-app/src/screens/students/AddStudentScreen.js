@@ -20,8 +20,10 @@ export default function AddStudentScreen({ navigation }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   
-  // Debug: Log user data to see what's available
-  console.log('Current user data:', user);
+  // Debug: Log user data to see what's available (only once)
+  React.useEffect(() => {
+    console.log('Current user data:', user);
+  }, []);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showYearPicker, setShowYearPicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -159,7 +161,7 @@ export default function AddStudentScreen({ navigation }) {
 
       // Only add school if user has one associated
       if (user?.school) {
-        studentData.school = user.school;
+        studentData.school = user.school._id || user.school;
       }
 
       console.log('Submitting student data:', studentData);
