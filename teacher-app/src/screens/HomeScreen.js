@@ -76,18 +76,24 @@ export default function HomeScreen({ navigation }) {
       
       // Get today's attendance
       try {
+        console.log('Querying attendance for date:', today);
+        console.log('Date object used:', new Date());
+        console.log('ISO string:', new Date().toISOString());
+        console.log('Local date string:', new Date().toLocaleDateString());
+        
         const attendanceResponse = await attendanceAPI.getAttendance({ 
           startDate: today,
           endDate: today,
           limit: 100
         });
+        console.log('Attendance query parameters:', { startDate: today, endDate: today, limit: 100 });
         console.log('Full attendance API response:', JSON.stringify(attendanceResponse, null, 2));
         console.log('Attendance response data:', attendanceResponse.data);
         console.log('Attendance response structure keys:', Object.keys(attendanceResponse.data || {}));
         
-        // Try multiple possible data structures
-        let attendanceData = attendanceResponse.data?.attendance || 
-                           attendanceResponse.data?.data?.attendance || 
+        // Try multiple possible data structures - prioritize the correct nested structure
+        let attendanceData = attendanceResponse.data?.data?.attendance || 
+                           attendanceResponse.data?.attendance || 
                            attendanceResponse.data?.data || 
                            [];
         
@@ -114,9 +120,26 @@ export default function HomeScreen({ navigation }) {
           console.log('Attendance data value:', attendanceData);
         }
         
-        // If no attendance data found, check if it's because no attendance was marked today
+        // If no attendance data found, try a broader search to see if any attendance exists
         if (presentToday === 0 && absentToday === 0 && totalStudents > 0) {
-          console.log('⚠️ No attendance marked for today yet. Students exist but no attendance records found.');
+          console.log('⚠️ No attendance found for today. Trying broader search...');
+          
+          try {
+            // Try without date filter to see if any attendance exists at all
+            const allAttendanceResponse = await attendanceAPI.getAttendance({ limit: 10 });
+            console.log('All attendance (no date filter):', allAttendanceResponse.data);
+            
+            const allAttendanceData = allAttendanceResponse.data?.data?.attendance || [];
+            console.log('Total attendance records in system:', allAttendanceData.length);
+            
+            if (allAttendanceData.length > 0) {
+              console.log('Sample attendance record:', allAttendanceData[0]);
+              console.log('Date format in records:', allAttendanceData.map(a => a.date));
+            }
+          } catch (broadErr) {
+            console.log('Could not fetch broader attendance data:', broadErr.message);
+          }
+          
           console.log('💡 Suggestion: Go to Attendance tab to mark today\'s attendance');
         }
         
