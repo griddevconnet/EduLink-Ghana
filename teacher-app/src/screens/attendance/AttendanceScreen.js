@@ -276,6 +276,8 @@ export default function AttendanceScreen({ navigation }) {
       try {
         const { authAPI } = require('../../services/api');
         const currentProfile = await authAPI.getProfile();
+        console.log('Full profile response:', currentProfile);
+        console.log('Profile response data:', currentProfile.data);
         console.log('Current user profile:', currentProfile.data?.user);
         console.log('Current user school:', currentProfile.data?.user?.school);
         console.log('User school ID:', currentProfile.data?.user?.school?._id || currentProfile.data?.user?.school);
