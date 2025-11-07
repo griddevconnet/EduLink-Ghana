@@ -117,6 +117,7 @@ function MainNavigator() {
         options={{ 
           title: 'Mark Attendance',
           tabBarLabel: 'Attendance',
+          headerShown: false,
         }}
       />
       <Tab.Screen 
@@ -125,6 +126,7 @@ function MainNavigator() {
         options={{ 
           title: 'My Profile',
           tabBarLabel: 'Profile',
+          headerShown: false,
         }}
       />
     </Tab.Navigator>
