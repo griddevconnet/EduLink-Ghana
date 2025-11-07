@@ -1,23 +1,24 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  StyleSheet, 
-  ScrollView, 
-  StatusBar, 
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  StatusBar,
+  TouchableOpacity,
   Alert,
-  TouchableOpacity 
 } from 'react-native';
-import { 
-  Text, 
-  Button, 
-  Card, 
-  TextInput, 
+import {
+  Text,
+  Card,
+  Button,
+  TextInput,
   ActivityIndicator,
   Avatar,
   Divider 
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../services/api';
 
@@ -37,6 +38,43 @@ export default function ProfileScreen() {
     'Volta', 'Northern', 'Upper East', 'Upper West', 'Brong Ahafo',
     'Savannah', 'North East', 'Bono', 'Bono East', 'Ahafo', 'Oti'
   ];
+
+  const handleFixStudentAssociations = async () => {
+    Alert.alert(
+      'Fix Student Access',
+      'This will fix access issues for students you created. Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Fix', 
+          onPress: async () => {
+            try {
+              setLoading(true);
+              const response = await fetch('https://edulink-backend-07ac.onrender.com/api/students/fix-associations', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${await AsyncStorage.getItem('authToken')}`
+                }
+              });
+              
+              const result = await response.json();
+              
+              if (response.ok) {
+                Alert.alert('Success', `Fixed ${result.data.fixedCount} student associations`);
+              } else {
+                Alert.alert('Error', result.message || 'Failed to fix associations');
+              }
+            } catch (error) {
+              Alert.alert('Error', 'Network error. Please try again.');
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const handleSchoolSetup = async () => {
     if (!schoolData.name.trim()) {
@@ -261,44 +299,56 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Account Actions */}
-        <Card style={styles.card}>
-          <Card.Content style={styles.cardContent}>
+      <Card style={styles.card}>
+        <Card.Content style={styles.cardContent}>
+          <View style={styles.sectionHeader}>
+            <MaterialCommunityIcons name="cog" size={24} color="#1CABE2" />
             <Text style={styles.sectionTitle}>Account Actions</Text>
-            <Divider style={styles.divider} />
-            
-            <TouchableOpacity style={styles.actionItem}>
-              <MaterialCommunityIcons name="key-change" size={24} color="#6B7280" />
-              <Text style={styles.actionText}>Change Password</Text>
-              <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.actionItem}>
-              <MaterialCommunityIcons name="phone-check" size={24} color="#6B7280" />
-              <Text style={styles.actionText}>Verify Phone Number</Text>
-              <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.actionItem}>
-              <MaterialCommunityIcons name="help-circle" size={24} color="#6B7280" />
-              <Text style={styles.actionText}>Help & Support</Text>
-              <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
-            </TouchableOpacity>
-          </Card.Content>
-        </Card>
+          </View>
 
-        {/* Logout Button */}
-        <Button 
-          mode="contained" 
-          onPress={logout} 
-          style={styles.logoutButton}
-          buttonColor="#F44336"
-          icon="logout"
-        >
-          Logout
-        </Button>
-      </ScrollView>
-    </View>
-  );
+          <TouchableOpacity style={styles.actionItem}>
+            <MaterialCommunityIcons name="lock-reset" size={20} color="#374785" />
+            <Text style={styles.actionText}>Change Password</Text>
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#9CA3AF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionItem}>
+            <MaterialCommunityIcons name="phone-check" size={20} color="#374785" />
+            <Text style={styles.actionText}>Verify Phone Number</Text>
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#9CA3AF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionItem}>
+            <MaterialCommunityIcons name="help-circle" size={20} color="#374785" />
+            <Text style={styles.actionText}>Help & Support</Text>
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#9CA3AF" />
+          </TouchableOpacity>
+
+          {/* Temporary Fix Button */}
+          <TouchableOpacity 
+            style={[styles.actionItem, { backgroundColor: '#FFF3CD', borderRadius: 8, marginTop: 10 }]}
+            onPress={handleFixStudentAssociations}
+          >
+            <MaterialCommunityIcons name="wrench" size={20} color="#856404" />
+            <Text style={[styles.actionText, { color: '#856404' }]}>Fix Student Access (Temp)</Text>
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#856404" />
+          </TouchableOpacity>
+        </Card.Content>
+      </Card>
+
+      {/* Logout Button */}
+      <Button 
+        mode="contained" 
+        onPress={logout} 
+        style={styles.logoutButton}
+        buttonColor="#F44336"
+        icon="logout"
+      >
+        Logout
+      </Button>
+    </ScrollView>
+  </View>
+);
 }
 
 const styles = StyleSheet.create({

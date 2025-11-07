@@ -264,6 +264,13 @@ const getStudent = async (req, res, next) => {
     
     // Check access for teachers
     if (['teacher', 'headteacher'].includes(req.user.role)) {
+      console.log('=== STUDENT ACCESS DEBUG ===');
+      console.log('Teacher ID:', req.user._id);
+      console.log('Teacher School:', req.user.school);
+      console.log('Student ID:', student._id);
+      console.log('Student School:', student.school?._id);
+      console.log('Student Registered By:', student.registeredBy);
+      
       // Allow access if:
       // 1. Student has no school assigned (orphaned student)
       // 2. Student's school matches teacher's school
@@ -271,6 +278,10 @@ const getStudent = async (req, res, next) => {
       const hasSchoolAccess = !student.school || 
                              (req.user.school && student.school?._id.toString() === req.user.school.toString());
       const isRegisteredByTeacher = student.registeredBy?.toString() === req.user._id.toString();
+      
+      console.log('Has School Access:', hasSchoolAccess);
+      console.log('Is Registered By Teacher:', isRegisteredByTeacher);
+      console.log('=== END DEBUG ===');
       
       if (!hasSchoolAccess && !isRegisteredByTeacher) {
         return forbidden(res, 'Access denied to this student');
@@ -380,9 +391,20 @@ const deleteStudent = async (req, res, next) => {
     
     // Check access for teachers - same logic as getStudent
     if (['teacher', 'headteacher'].includes(req.user.role)) {
+      console.log('=== DELETE STUDENT ACCESS DEBUG ===');
+      console.log('Teacher ID:', req.user._id);
+      console.log('Teacher School:', req.user.school);
+      console.log('Student ID:', student._id);
+      console.log('Student School:', student.school?._id);
+      console.log('Student Registered By:', student.registeredBy);
+      
       const hasSchoolAccess = !student.school || 
                              (req.user.school && student.school?._id.toString() === req.user.school.toString());
       const isRegisteredByTeacher = student.registeredBy?.toString() === req.user._id.toString();
+      
+      console.log('Has School Access:', hasSchoolAccess);
+      console.log('Is Registered By Teacher:', isRegisteredByTeacher);
+      console.log('=== END DELETE DEBUG ===');
       
       if (!hasSchoolAccess && !isRegisteredByTeacher) {
         return forbidden(res, 'Access denied to delete this student');
@@ -508,6 +530,63 @@ const verifyParentContact = async (req, res, next) => {
   }
 };
 
+/**
+ * Fix orphaned students by associating them with their creator's school
+ * POST /api/students/fix-associations
+ * @access Admin
+ */
+const fixStudentSchoolAssociations = async (req, res, next) => {
+  try {
+    console.log('Starting student school association fix...');
+    
+    // Find all students without school associations
+    const orphanedStudents = await Student.find({ 
+      school: { $exists: false },
+      active: true 
+    }).populate('registeredBy', 'school firstName lastName');
+    
+    console.log(`Found ${orphanedStudents.length} orphaned students`);
+    
+    let fixedCount = 0;
+    
+    for (const student of orphanedStudents) {
+      if (student.registeredBy && student.registeredBy.school) {
+        student.school = student.registeredBy.school;
+        await student.save();
+        fixedCount++;
+        console.log(`Fixed student: ${student.firstName} ${student.lastName} -> School: ${student.registeredBy.school}`);
+      }
+    }
+    
+    // Also find students with null school
+    const nullSchoolStudents = await Student.find({ 
+      school: null,
+      active: true 
+    }).populate('registeredBy', 'school firstName lastName');
+    
+    console.log(`Found ${nullSchoolStudents.length} students with null school`);
+    
+    for (const student of nullSchoolStudents) {
+      if (student.registeredBy && student.registeredBy.school) {
+        student.school = student.registeredBy.school;
+        await student.save();
+        fixedCount++;
+        console.log(`Fixed null school student: ${student.firstName} ${student.lastName} -> School: ${student.registeredBy.school}`);
+      }
+    }
+    
+    console.log(`Fixed ${fixedCount} student associations`);
+    
+    success(res, { 
+      fixedCount,
+      totalOrphaned: orphanedStudents.length + nullSchoolStudents.length
+    }, `Fixed ${fixedCount} student school associations`);
+  } catch (error) {
+    console.error('Error fixing student associations:', error);
+    next(error);
+  }
+};
+
 module.exports = {
   createStudent,
   getStudents,
@@ -517,4 +596,5 @@ module.exports = {
   deleteStudent,
   getDisaggregatedStats,
   verifyParentContact,
+  fixStudentSchoolAssociations,
 };

@@ -195,4 +195,11 @@ router.post(
  */
 router.delete('/:id', requirePermission('teacher'), studentController.deleteStudent);
 
+/**
+ * @route   POST /api/students/fix-associations
+ * @desc    Fix orphaned student school associations
+ * @access  Admin only
+ */
+router.post('/fix-associations', requirePermission('admin'), studentController.fixStudentSchoolAssociations);
+
 module.exports = router;
