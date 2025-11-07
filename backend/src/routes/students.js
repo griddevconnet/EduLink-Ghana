@@ -55,6 +55,8 @@ router.post(
       .withMessage('Invalid disability status'),
     body('disabilityDetails').optional().trim(),
     body('school').optional().isMongoId().withMessage('Invalid school ID'),
+    body('schoolName').optional().trim().notEmpty().withMessage('School name is required when no school ID provided'),
+    body('schoolLocation').optional().trim(),
     body('class').optional().trim(),
     body('studentId').optional().trim(),
     body('enrollmentStatus')

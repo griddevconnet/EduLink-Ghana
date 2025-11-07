@@ -112,6 +112,10 @@ router.put(
     body('firstName').optional().trim().notEmpty().withMessage('First name cannot be empty'),
     body('lastName').optional().trim().notEmpty().withMessage('Last name cannot be empty'),
     body('email').optional().isEmail().withMessage('Please provide a valid email'),
+    body('schoolInfo.name').optional().trim().notEmpty().withMessage('School name cannot be empty'),
+    body('schoolInfo.district').optional().trim().notEmpty().withMessage('District cannot be empty'),
+    body('schoolInfo.region').optional().trim(),
+    body('schoolInfo.address').optional().trim(),
     validate,
   ],
   authController.updateMe

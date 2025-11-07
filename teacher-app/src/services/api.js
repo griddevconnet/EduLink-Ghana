@@ -51,6 +51,9 @@ export const authAPI = {
   
   getProfile: () =>
     api.get('/api/auth/me'),
+  
+  updateProfile: (profileData) =>
+    api.put('/api/auth/me', profileData),
 };
 
 // School APIs

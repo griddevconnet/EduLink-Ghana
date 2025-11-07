@@ -200,7 +200,7 @@ const getMe = async (req, res, next) => {
  */
 const updateMe = async (req, res, next) => {
   try {
-    const { firstName, lastName, email } = req.body;
+    const { firstName, lastName, email, schoolInfo } = req.body;
     
     const user = await User.findById(req.user._id);
     
@@ -213,7 +213,36 @@ const updateMe = async (req, res, next) => {
     if (lastName) user.lastName = lastName;
     if (email) user.email = email;
     
+    // Handle school setup
+    if (schoolInfo) {
+      const { School } = require('../models');
+      
+      // Try to find existing school by name
+      let school = await School.findOne({ 
+        name: { $regex: new RegExp(schoolInfo.name, 'i') } 
+      });
+      
+      if (!school) {
+        // Create new school if it doesn't exist
+        school = await School.create({
+          name: schoolInfo.name,
+          region: schoolInfo.region || 'Greater Accra',
+          district: schoolInfo.district,
+          address: schoolInfo.address,
+          type: 'Primary',
+          ownership: 'Public',
+          active: true,
+        });
+      }
+      
+      // Associate school with user
+      user.school = school._id;
+    }
+    
     await user.save();
+    
+    // Populate school information for response
+    await user.populate('school', 'name region district');
     
     success(res, { user }, 'Profile updated successfully');
   } catch (error) {
