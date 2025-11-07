@@ -21,6 +21,7 @@ export default function AddStudentScreen({ navigation }) {
     otherNames: '',
     dateOfBirth: '',
     gender: '',
+    languageSpoken: '',
     class: '',
     schoolName: '',
     schoolLocation: '',
@@ -33,6 +34,7 @@ export default function AddStudentScreen({ navigation }) {
   });
 
   const genderOptions = ['Male', 'Female', 'Other'];
+  const languageOptions = ['English', 'Twi', 'Ga', 'Ewe', 'Dagbani', 'Fante', 'Hausa', 'Other'];
   const disabilityOptions = ['None', 'Visual', 'Hearing', 'Physical', 'Cognitive', 'Multiple'];
 
   const updateField = (field, value) => {
@@ -77,6 +79,7 @@ export default function AddStudentScreen({ navigation }) {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         otherNames: formData.otherNames.trim() || undefined,
+        languageSpoken: formData.languageSpoken || undefined,
         class: formData.class.trim() || undefined,
         schoolName: formData.schoolName.trim(),
         schoolLocation: formData.schoolLocation.trim() || undefined,
@@ -122,6 +125,26 @@ export default function AddStudentScreen({ navigation }) {
             textStyle={formData.gender === gender ? styles.chipTextSelected : styles.chipText}
           >
             {gender}
+          </Chip>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
+  const renderLanguageChips = () => (
+    <View style={styles.chipContainer}>
+      {languageOptions.map((language) => (
+        <TouchableOpacity key={language} onPress={() => updateField('languageSpoken', language)}>
+          <Chip
+            selected={formData.languageSpoken === language}
+            mode={formData.languageSpoken === language ? 'flat' : 'outlined'}
+            style={[
+              styles.chip,
+              formData.languageSpoken === language && styles.chipSelected
+            ]}
+            textStyle={formData.languageSpoken === language ? styles.chipTextSelected : styles.chipText}
+          >
+            {language}
           </Chip>
         </TouchableOpacity>
       ))}
@@ -218,6 +241,9 @@ export default function AddStudentScreen({ navigation }) {
 
             <Text style={styles.fieldLabel}>Gender *</Text>
             {renderGenderChips()}
+
+            <Text style={styles.fieldLabel}>Language Spoken</Text>
+            {renderLanguageChips()}
 
             {/* School Information */}
             <Text style={styles.sectionTitle}>School Information</Text>
