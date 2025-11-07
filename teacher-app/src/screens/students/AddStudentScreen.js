@@ -7,14 +7,18 @@ import {
   TouchableOpacity,
   StatusBar,
   Alert,
+  Platform,
 } from 'react-native';
 import { TextInput, Button, Card, ActivityIndicator, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { studentAPI } from '../../services/api';
 
 export default function AddStudentScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -39,6 +43,29 @@ export default function AddStudentScreen({ navigation }) {
 
   const updateField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleDateChange = (event, date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (date) {
+      setSelectedDate(date);
+      const formattedDate = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+      updateField('dateOfBirth', formattedDate);
+    }
+  };
+
+  const showDatePickerModal = () => {
+    setShowDatePicker(true);
+  };
+
+  const formatDisplayDate = (dateString) => {
+    if (!dateString) return 'Select Date of Birth';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   };
 
   const validateForm = () => {
@@ -228,16 +255,30 @@ export default function AddStudentScreen({ navigation }) {
               activeOutlineColor="#1CABE2"
             />
 
-            <TextInput
-              label="Date of Birth (YYYY-MM-DD) *"
-              value={formData.dateOfBirth}
-              onChangeText={(text) => updateField('dateOfBirth', text)}
-              style={styles.input}
-              mode="outlined"
-              outlineColor="#E5E7EB"
-              activeOutlineColor="#1CABE2"
-              placeholder="2010-01-15"
-            />
+            <TouchableOpacity onPress={showDatePickerModal} style={styles.datePickerContainer}>
+              <View style={styles.datePickerInput}>
+                <MaterialCommunityIcons name="calendar" size={20} color="#6B7280" style={styles.dateIcon} />
+                <Text style={[
+                  styles.dateText,
+                  !formData.dateOfBirth && styles.datePlaceholder
+                ]}>
+                  {formatDisplayDate(formData.dateOfBirth)}
+                </Text>
+                <MaterialCommunityIcons name="chevron-down" size={20} color="#6B7280" />
+              </View>
+              <Text style={styles.dateLabel}>Date of Birth *</Text>
+            </TouchableOpacity>
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={selectedDate}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={handleDateChange}
+                maximumDate={new Date()}
+                minimumDate={new Date(2000, 0, 1)}
+              />
+            )}
 
             <Text style={styles.fieldLabel}>Gender *</Text>
             {renderGenderChips()}
@@ -442,5 +483,39 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  datePickerContainer: {
+    marginBottom: 15,
+  },
+  datePickerInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 16,
+    minHeight: 56,
+  },
+  dateIcon: {
+    marginRight: 12,
+  },
+  dateText: {
+    flex: 1,
+    fontSize: 16,
+    color: '#374785',
+  },
+  datePlaceholder: {
+    color: '#9CA3AF',
+  },
+  dateLabel: {
+    position: 'absolute',
+    left: 12,
+    top: -8,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 4,
+    fontSize: 12,
+    color: '#6B7280',
   },
 });
