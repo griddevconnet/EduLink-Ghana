@@ -133,6 +133,30 @@ export default function AttendanceScreen({ navigation }) {
     try {
       console.log('🧪 TESTING BACKEND CONNECTION FOR ATTENDANCE...');
       
+      // Step 0: Check authentication status
+      console.log('🧪 Step 0: Checking authentication...');
+      console.log('🧪 User authenticated:', !!user);
+      console.log('🧪 User role:', user?.role);
+      console.log('🧪 User school ID:', user?.school?._id || user?.school);
+      
+      // Test profile endpoint to see current user data
+      try {
+        console.log('🧪 Step 0.5: Fetching fresh user profile...');
+        const { authAPI } = require('../../services/api');
+        const profileResponse = await authAPI.getProfile();
+        console.log('🧪 Fresh profile data:', profileResponse.data);
+        console.log('🧪 Fresh profile school:', profileResponse.data?.user?.school);
+      } catch (profileError) {
+        console.log('❌ Profile fetch failed:', profileError.message);
+        console.log('❌ Profile error status:', profileError.response?.status);
+      }
+      
+      // Check if auth token exists
+      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      const token = await AsyncStorage.getItem('authToken');
+      console.log('🧪 Auth token exists:', !!token);
+      console.log('🧪 Auth token preview:', token ? `${token.substring(0, 20)}...` : 'null');
+      
       // First test: Check if we can reach the attendance endpoint at all
       console.log('🧪 Step 1: Testing attendance GET endpoint...');
       try {
@@ -140,6 +164,8 @@ export default function AttendanceScreen({ navigation }) {
         console.log('✅ GET attendance endpoint works:', getResponse.status);
       } catch (getError) {
         console.log('❌ GET attendance endpoint failed:', getError.message);
+        console.log('❌ GET error status:', getError.response?.status);
+        console.log('❌ GET error response:', getError.response?.data);
       }
       
       // Second test: Try to submit attendance
@@ -147,6 +173,13 @@ export default function AttendanceScreen({ navigation }) {
       
       // Get user's school ID (required by backend)
       const schoolId = user?.school?._id || user?.school;
+      
+      // Validate school ID before sending
+      if (!schoolId) {
+        console.log('❌ No school ID found for user!');
+        Alert.alert('Error', 'User has no school associated. Please check your profile.');
+        return;
+      }
       
       const testData = {
         school: schoolId,
@@ -158,7 +191,13 @@ export default function AttendanceScreen({ navigation }) {
       };
       
       console.log('🧪 Test data:', testData);
-      console.log('🧪 School ID:', schoolId);
+      console.log('🧪 School ID being sent:', schoolId);
+      console.log('🧪 School ID type:', typeof schoolId);
+      console.log('🧪 User object:', user);
+      console.log('🧪 User role:', user?.role);
+      console.log('🧪 User school raw:', user?.school);
+      console.log('🧪 User school _id:', user?.school?._id);
+      console.log('🧪 User school toString:', user?.school?.toString?.());
       console.log('🧪 Making test API call to bulk mark...');
       
       const response = await attendanceAPI.bulkMark(testData);
