@@ -275,9 +275,16 @@ const getStudent = async (req, res, next) => {
       // 1. Student has no school assigned (orphaned student)
       // 2. Student's school matches teacher's school
       // 3. Student was registered by this teacher
+      const teacherSchoolId = req.user.school?._id?.toString() || req.user.school?.toString();
+      const studentSchoolId = student.school?._id?.toString() || student.school?.toString();
+      
+      console.log('Teacher School ID (extracted):', teacherSchoolId);
+      console.log('Student School ID (extracted):', studentSchoolId);
+      console.log('IDs Match:', teacherSchoolId === studentSchoolId);
+      
       const hasSchoolAccess = !student.school || 
-                             (req.user.school && student.school?._id.toString() === req.user.school.toString());
-      const isRegisteredByTeacher = student.registeredBy?.toString() === req.user._id.toString();
+                             (teacherSchoolId && studentSchoolId && teacherSchoolId === studentSchoolId);
+      const isRegisteredByTeacher = student.registeredBy?._id?.toString() === req.user._id.toString();
       
       console.log('Has School Access:', hasSchoolAccess);
       console.log('Is Registered By Teacher:', isRegisteredByTeacher);
@@ -398,9 +405,16 @@ const deleteStudent = async (req, res, next) => {
       console.log('Student School:', student.school?._id);
       console.log('Student Registered By:', student.registeredBy);
       
+      const teacherSchoolId = req.user.school?._id?.toString() || req.user.school?.toString();
+      const studentSchoolId = student.school?._id?.toString() || student.school?.toString();
+      
+      console.log('Teacher School ID (extracted):', teacherSchoolId);
+      console.log('Student School ID (extracted):', studentSchoolId);
+      console.log('IDs Match:', teacherSchoolId === studentSchoolId);
+      
       const hasSchoolAccess = !student.school || 
-                             (req.user.school && student.school?._id.toString() === req.user.school.toString());
-      const isRegisteredByTeacher = student.registeredBy?.toString() === req.user._id.toString();
+                             (teacherSchoolId && studentSchoolId && teacherSchoolId === studentSchoolId);
+      const isRegisteredByTeacher = student.registeredBy?._id?.toString() === req.user._id.toString();
       
       console.log('Has School Access:', hasSchoolAccess);
       console.log('Is Registered By Teacher:', isRegisteredByTeacher);
