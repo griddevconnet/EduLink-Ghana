@@ -128,7 +128,18 @@ export default function ProfileScreen() {
               <Text style={styles.sectionTitle}>School Information</Text>
               {!editingSchool && (
                 <TouchableOpacity 
-                  onPress={() => setEditingSchool(true)}
+                  onPress={() => {
+                    // Pre-populate form with existing school data
+                    if (user?.school) {
+                      setSchoolData({
+                        name: user.school.name || '',
+                        region: user.school.region || 'Greater Accra',
+                        district: user.school.district || '',
+                        address: user.school.address || ''
+                      });
+                    }
+                    setEditingSchool(true);
+                  }}
                   style={styles.editButton}
                 >
                   <MaterialCommunityIcons name="pencil" size={20} color="#1CABE2" />
@@ -136,7 +147,7 @@ export default function ProfileScreen() {
               )}
             </View>
 
-            {user?.school ? (
+            {user?.school && !editingSchool ? (
               <View style={styles.schoolInfo}>
                 <Text style={styles.schoolName}>{user.school.name}</Text>
                 <Text style={styles.schoolDetails}>
@@ -164,6 +175,30 @@ export default function ProfileScreen() {
                   style={styles.input}
                   mode="outlined"
                 />
+
+                {/* Region Selector */}
+                <View style={styles.regionSelector}>
+                  <Text style={styles.regionLabel}>Region</Text>
+                  <View style={styles.regionChips}>
+                    {regions.map((region) => (
+                      <TouchableOpacity
+                        key={region}
+                        onPress={() => setSchoolData({...schoolData, region})}
+                        style={[
+                          styles.regionChip,
+                          schoolData.region === region && styles.regionChipSelected
+                        ]}
+                      >
+                        <Text style={[
+                          styles.regionChipText,
+                          schoolData.region === region && styles.regionChipTextSelected
+                        ]}>
+                          {region}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
                 
                 <TextInput
                   label="Address (Optional)"
@@ -177,7 +212,16 @@ export default function ProfileScreen() {
                 <View style={styles.formButtons}>
                   <Button
                     mode="outlined"
-                    onPress={() => setEditingSchool(false)}
+                    onPress={() => {
+                      setEditingSchool(false);
+                      // Reset form data
+                      setSchoolData({
+                        name: '',
+                        region: 'Greater Accra',
+                        district: '',
+                        address: ''
+                      });
+                    }}
                     style={[styles.formButton, styles.cancelButton]}
                   >
                     Cancel
@@ -189,7 +233,7 @@ export default function ProfileScreen() {
                     disabled={loading}
                     style={[styles.formButton, styles.saveButton]}
                   >
-                    Save School
+                    {user?.school ? 'Update School' : 'Save School'}
                   </Button>
                 </View>
               </View>
@@ -397,6 +441,41 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 15,
+  },
+  regionSelector: {
+    marginBottom: 15,
+  },
+  regionLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374785',
+    marginBottom: 10,
+  },
+  regionChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  regionChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  regionChipSelected: {
+    backgroundColor: '#1CABE2',
+    borderColor: '#1CABE2',
+  },
+  regionChipText: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  regionChipTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   formButtons: {
     flexDirection: 'row',
