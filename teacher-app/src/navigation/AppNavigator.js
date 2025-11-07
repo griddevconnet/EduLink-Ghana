@@ -146,7 +146,7 @@ function StudentsNavigator() {
       <Stack.Screen 
         name="StudentsList" 
         component={StudentsScreen}
-        options={{ title: 'My Students' }}
+        options={{ title: 'My Students', headerShown: false }}
       />
       <Stack.Screen 
         name="StudentDetail" 
