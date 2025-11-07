@@ -18,6 +18,7 @@ import { studentAPI } from '../../services/api';
 export default function AddStudentScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showYearPicker, setShowYearPicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [formData, setFormData] = useState({
     firstName: '',
@@ -56,6 +57,28 @@ export default function AddStudentScreen({ navigation }) {
 
   const showDatePickerModal = () => {
     setShowDatePicker(true);
+  };
+
+  const showYearPickerModal = () => {
+    setShowYearPicker(true);
+  };
+
+  const selectYear = (year) => {
+    const newDate = new Date(selectedDate);
+    newDate.setFullYear(year);
+    setSelectedDate(newDate);
+    const formattedDate = newDate.toISOString().split('T')[0];
+    updateField('dateOfBirth', formattedDate);
+    setShowYearPicker(false);
+  };
+
+  const generateYears = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let year = currentYear; year >= 2000; year--) {
+      years.push(year);
+    }
+    return years;
   };
 
   const formatDisplayDate = (dateString) => {
@@ -255,29 +278,75 @@ export default function AddStudentScreen({ navigation }) {
               activeOutlineColor="#1CABE2"
             />
 
-            <TouchableOpacity onPress={showDatePickerModal} style={styles.datePickerContainer}>
-              <View style={styles.datePickerInput}>
-                <MaterialCommunityIcons name="calendar" size={20} color="#6B7280" style={styles.dateIcon} />
-                <Text style={[
-                  styles.dateText,
-                  !formData.dateOfBirth && styles.datePlaceholder
-                ]}>
-                  {formatDisplayDate(formData.dateOfBirth)}
-                </Text>
-                <MaterialCommunityIcons name="chevron-down" size={20} color="#6B7280" />
-              </View>
+            <View style={styles.datePickerContainer}>
               <Text style={styles.dateLabel}>Date of Birth *</Text>
-            </TouchableOpacity>
+              
+              {/* Quick Year Selection */}
+              <View style={styles.dateRow}>
+                <TouchableOpacity onPress={showYearPickerModal} style={styles.yearButton}>
+                  <MaterialCommunityIcons name="calendar-clock" size={16} color="#1CABE2" />
+                  <Text style={styles.yearButtonText}>
+                    {selectedDate.getFullYear()}
+                  </Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity onPress={showDatePickerModal} style={styles.datePickerInput}>
+                  <MaterialCommunityIcons name="calendar" size={20} color="#6B7280" style={styles.dateIcon} />
+                  <Text style={[
+                    styles.dateText,
+                    !formData.dateOfBirth && styles.datePlaceholder
+                  ]}>
+                    {formatDisplayDate(formData.dateOfBirth)}
+                  </Text>
+                  <MaterialCommunityIcons name="chevron-down" size={20} color="#6B7280" />
+                </TouchableOpacity>
+              </View>
+            </View>
 
             {showDatePicker && (
               <DateTimePicker
                 value={selectedDate}
                 mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                display={Platform.OS === 'ios' ? 'compact' : 'spinner'}
                 onChange={handleDateChange}
                 maximumDate={new Date()}
                 minimumDate={new Date(2000, 0, 1)}
+                textColor="#374785"
+                accentColor="#1CABE2"
               />
+            )}
+
+            {showYearPicker && (
+              <View style={styles.yearPickerModal}>
+                <View style={styles.yearPickerContent}>
+                  <Text style={styles.yearPickerTitle}>Select Birth Year</Text>
+                  <ScrollView style={styles.yearsList} showsVerticalScrollIndicator={false}>
+                    {generateYears().map((year) => (
+                      <TouchableOpacity
+                        key={year}
+                        onPress={() => selectYear(year)}
+                        style={[
+                          styles.yearItem,
+                          selectedDate.getFullYear() === year && styles.yearItemSelected
+                        ]}
+                      >
+                        <Text style={[
+                          styles.yearItemText,
+                          selectedDate.getFullYear() === year && styles.yearItemTextSelected
+                        ]}>
+                          {year}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity
+                    onPress={() => setShowYearPicker(false)}
+                    style={styles.yearPickerClose}
+                  >
+                    <Text style={styles.yearPickerCloseText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             )}
 
             <Text style={styles.fieldLabel}>Gender *</Text>
@@ -510,12 +579,87 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
   },
   dateLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374785',
+    marginBottom: 8,
+  },
+  dateRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  yearButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 12,
+    paddingVertical: 16,
+    borderRadius: 8,
+    minWidth: 80,
+    justifyContent: 'center',
+    gap: 6,
+  },
+  yearButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1CABE2',
+  },
+  yearPickerModal: {
     position: 'absolute',
-    left: 12,
-    top: -8,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  yearPickerContent: {
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 4,
-    fontSize: 12,
-    color: '#6B7280',
+    borderRadius: 15,
+    padding: 20,
+    width: '80%',
+    maxHeight: '70%',
+  },
+  yearPickerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#374785',
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  yearsList: {
+    maxHeight: 300,
+  },
+  yearItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginBottom: 5,
+  },
+  yearItemSelected: {
+    backgroundColor: '#1CABE2',
+  },
+  yearItemText: {
+    fontSize: 16,
+    color: '#374785',
+    textAlign: 'center',
+  },
+  yearItemTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  yearPickerClose: {
+    backgroundColor: '#E5E7EB',
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 15,
+  },
+  yearPickerCloseText: {
+    fontSize: 14,
+    color: '#374785',
+    textAlign: 'center',
+    fontWeight: '600',
   },
 });
