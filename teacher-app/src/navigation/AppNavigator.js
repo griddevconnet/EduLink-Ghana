@@ -152,7 +152,7 @@ function StudentsNavigator() {
       <Stack.Screen 
         name="StudentDetail" 
         component={StudentDetailScreen}
-        options={{ title: 'Student Details' }}
+        options={{ title: 'Student Details', headerShown: false }}
       />
       <Stack.Screen 
         name="AddStudent" 
