@@ -50,23 +50,28 @@ export default function AttendanceScreen({ navigation }) {
       console.log('Students loaded:', studentsList.length);
       setStudents(studentsList);
 
-      // Load existing attendance for selected date
-      console.log('Loading attendance for date:', selectedDate);
-      const attendanceResponse = await attendanceAPI.getAttendance({
-        startDate: selectedDate,
-        endDate: selectedDate,
-        limit: 1000
-      });
-      console.log('Attendance response:', attendanceResponse.data);
-      
-      // Convert attendance array to object for easy lookup
-      const attendanceMap = {};
-      if (attendanceResponse.data.attendance) {
-        attendanceResponse.data.attendance.forEach(record => {
-          attendanceMap[record.student._id || record.student] = record.status;
+      // Only load attendance if there are students
+      if (studentsList.length > 0) {
+        console.log('Loading attendance for date:', selectedDate);
+        const attendanceResponse = await attendanceAPI.getAttendance({
+          startDate: selectedDate,
+          endDate: selectedDate,
+          limit: 100
         });
+        console.log('Attendance response:', attendanceResponse.data);
+        
+        // Convert attendance array to object for easy lookup
+        const attendanceMap = {};
+        if (attendanceResponse.data.attendance) {
+          attendanceResponse.data.attendance.forEach(record => {
+            attendanceMap[record.student._id || record.student] = record.status;
+          });
+        }
+        setAttendanceData(attendanceMap);
+      } else {
+        console.log('No students found, skipping attendance load');
+        setAttendanceData({});
       }
-      setAttendanceData(attendanceMap);
 
     } catch (error) {
       console.error('Error loading attendance data:', error);
