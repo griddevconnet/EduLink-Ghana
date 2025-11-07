@@ -14,8 +14,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { studentAPI } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 export default function AddStudentScreen({ navigation }) {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showYearPicker, setShowYearPicker] = useState(false);
@@ -92,6 +94,10 @@ export default function AddStudentScreen({ navigation }) {
   };
 
   const validateForm = () => {
+    if (!user?.school) {
+      Alert.alert('Validation Error', 'No school associated with your account. Please contact administrator.');
+      return false;
+    }
     if (!formData.firstName.trim()) {
       Alert.alert('Validation Error', 'First name is required');
       return false;
@@ -101,7 +107,7 @@ export default function AddStudentScreen({ navigation }) {
       return false;
     }
     if (!formData.dateOfBirth.trim()) {
-      Alert.alert('Validation Error', 'Date of birth is required (YYYY-MM-DD format)');
+      Alert.alert('Validation Error', 'Date of birth is required');
       return false;
     }
     if (!formData.gender) {
@@ -124,21 +130,38 @@ export default function AddStudentScreen({ navigation }) {
 
     setLoading(true);
     try {
+      // Create parent contact object
+      const parentName = [formData.parentFirstName?.trim(), formData.parentLastName?.trim()]
+        .filter(Boolean)
+        .join(' ') || 'Parent/Guardian';
+
       const studentData = {
-        ...formData,
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         otherNames: formData.otherNames.trim() || undefined,
-        languageSpoken: formData.languageSpoken || undefined,
+        dateOfBirth: formData.dateOfBirth,
+        gender: formData.gender,
         class: formData.class.trim() || undefined,
+        disabilityStatus: formData.disabilityStatus,
+        enrollmentStatus: formData.enrollmentStatus,
+        locationType: 'Rural', // Default for Ghana
+        school: user?.school, // Use teacher's school
+        parentContacts: [
+          {
+            phone: formData.parentContact.trim(),
+            name: parentName,
+            relation: 'Guardian',
+            preferredLanguage: formData.languageSpoken || 'English'
+          }
+        ],
+        // Additional fields for context (not in schema but might be useful)
         schoolName: formData.schoolName.trim(),
         schoolLocation: formData.schoolLocation.trim() || undefined,
-        parentFirstName: formData.parentFirstName.trim() || undefined,
-        parentLastName: formData.parentLastName.trim() || undefined,
-        parentContact: formData.parentContact.trim(),
       };
 
-      await studentAPI.create(studentData);
+      console.log('Submitting student data:', studentData);
+      const response = await studentAPI.create(studentData);
+      console.log('Student created successfully:', response.data);
       
       Alert.alert(
         'Success!', 
@@ -152,9 +175,23 @@ export default function AddStudentScreen({ navigation }) {
       );
     } catch (error) {
       console.error('Error adding student:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
+      let errorMessage = 'Failed to add student. Please try again.';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       Alert.alert(
         'Error', 
-        error.response?.data?.message || 'Failed to add student. Please try again.'
+        errorMessage,
+        [{ text: 'OK' }]
       );
     } finally {
       setLoading(false);
