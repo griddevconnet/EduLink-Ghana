@@ -127,6 +127,46 @@ export default function AttendanceScreen({ navigation }) {
     setAttendanceData(allAbsentData);
   };
 
+  const testBackendConnection = async () => {
+    try {
+      console.log('🧪 TESTING BACKEND CONNECTION FOR ATTENDANCE...');
+      
+      // First test: Check if we can reach the attendance endpoint at all
+      console.log('🧪 Step 1: Testing attendance GET endpoint...');
+      try {
+        const getResponse = await attendanceAPI.getAttendance({ limit: 1 });
+        console.log('✅ GET attendance endpoint works:', getResponse.status);
+      } catch (getError) {
+        console.log('❌ GET attendance endpoint failed:', getError.message);
+      }
+      
+      // Second test: Try to submit attendance
+      console.log('🧪 Step 2: Testing attendance POST endpoint...');
+      const testData = [{
+        student: students[0]?._id || 'test-student-id',
+        date: selectedDate,
+        status: 'present',
+        markedBy: 'teacher'
+      }];
+      
+      console.log('🧪 Test data:', testData);
+      console.log('🧪 Making test API call to bulk mark...');
+      
+      const response = await attendanceAPI.bulkMark(testData);
+      console.log('🧪 Test response:', response);
+      console.log('✅ Backend connection test SUCCESSFUL!');
+      
+      Alert.alert('Test Success', 'Backend connection is working!');
+      
+    } catch (error) {
+      console.error('🧪 Test failed:', error);
+      console.error('🧪 Test error response:', error.response?.data);
+      console.error('🧪 Test error status:', error.response?.status);
+      console.error('🧪 Test error config:', error.config);
+      Alert.alert('Test Failed', `Backend test failed: ${error.message}`);
+    }
+  };
+
   const submitAttendance = async () => {
     try {
       setSubmitting(true);
@@ -303,6 +343,18 @@ export default function AttendanceScreen({ navigation }) {
         </Button>
       </View>
 
+      {/* Test Button */}
+      <View style={styles.testSection}>
+        <Button
+          mode="contained"
+          onPress={testBackendConnection}
+          style={styles.testButton}
+          icon="test-tube"
+        >
+          Test Backend Connection
+        </Button>
+      </View>
+
       {/* Students List */}
       <ScrollView
         style={styles.scrollView}
@@ -403,6 +455,13 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
+  },
+  testSection: {
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  testButton: {
+    backgroundColor: '#FF9800',
   },
   scrollView: {
     flex: 1,
