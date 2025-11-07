@@ -22,9 +22,14 @@ export default function AddStudentScreen({ navigation }) {
     dateOfBirth: '',
     gender: '',
     class: '',
-    studentId: '',
+    schoolName: '',
+    schoolLocation: '',
     disabilityStatus: 'None',
     enrollmentStatus: 'enrolled',
+    // Parent Information
+    parentFirstName: '',
+    parentLastName: '',
+    parentContact: '',
   });
 
   const genderOptions = ['Male', 'Female', 'Other'];
@@ -51,6 +56,14 @@ export default function AddStudentScreen({ navigation }) {
       Alert.alert('Validation Error', 'Please select a gender');
       return false;
     }
+    if (!formData.schoolName.trim()) {
+      Alert.alert('Validation Error', 'School name is required');
+      return false;
+    }
+    if (!formData.parentContact.trim()) {
+      Alert.alert('Validation Error', 'Parent contact is required');
+      return false;
+    }
     return true;
   };
 
@@ -65,7 +78,11 @@ export default function AddStudentScreen({ navigation }) {
         lastName: formData.lastName.trim(),
         otherNames: formData.otherNames.trim() || undefined,
         class: formData.class.trim() || undefined,
-        studentId: formData.studentId.trim() || undefined,
+        schoolName: formData.schoolName.trim(),
+        schoolLocation: formData.schoolLocation.trim() || undefined,
+        parentFirstName: formData.parentFirstName.trim() || undefined,
+        parentLastName: formData.parentLastName.trim() || undefined,
+        parentContact: formData.parentContact.trim(),
       };
 
       await studentAPI.create(studentData);
@@ -205,28 +222,76 @@ export default function AddStudentScreen({ navigation }) {
             {/* School Information */}
             <Text style={styles.sectionTitle}>School Information</Text>
             
+            <TextInput
+              label="School Name *"
+              value={formData.schoolName}
+              onChangeText={(text) => updateField('schoolName', text)}
+              style={styles.input}
+              mode="outlined"
+              outlineColor="#E5E7EB"
+              activeOutlineColor="#1CABE2"
+              placeholder="Accra Primary School"
+            />
+
+            <TextInput
+              label="School Location"
+              value={formData.schoolLocation}
+              onChangeText={(text) => updateField('schoolLocation', text)}
+              style={styles.input}
+              mode="outlined"
+              outlineColor="#E5E7EB"
+              activeOutlineColor="#1CABE2"
+              placeholder="Accra, Greater Accra Region"
+            />
+
+            <TextInput
+              label="Class"
+              value={formData.class}
+              onChangeText={(text) => updateField('class', text)}
+              style={styles.input}
+              mode="outlined"
+              outlineColor="#E5E7EB"
+              activeOutlineColor="#1CABE2"
+              placeholder="Class 5"
+            />
+
+            {/* Parent Information */}
+            <Text style={styles.sectionTitle}>Parent Information</Text>
+            
             <View style={styles.row}>
               <TextInput
-                label="Class"
-                value={formData.class}
-                onChangeText={(text) => updateField('class', text)}
+                label="Parent First Name"
+                value={formData.parentFirstName}
+                onChangeText={(text) => updateField('parentFirstName', text)}
                 style={[styles.input, styles.halfInput]}
                 mode="outlined"
                 outlineColor="#E5E7EB"
                 activeOutlineColor="#1CABE2"
-                placeholder="Class 5"
+                placeholder="John"
               />
               <TextInput
-                label="Student ID"
-                value={formData.studentId}
-                onChangeText={(text) => updateField('studentId', text)}
+                label="Parent Last Name"
+                value={formData.parentLastName}
+                onChangeText={(text) => updateField('parentLastName', text)}
                 style={[styles.input, styles.halfInput]}
                 mode="outlined"
                 outlineColor="#E5E7EB"
                 activeOutlineColor="#1CABE2"
-                placeholder="STU001"
+                placeholder="Doe"
               />
             </View>
+
+            <TextInput
+              label="Parent Contact *"
+              value={formData.parentContact}
+              onChangeText={(text) => updateField('parentContact', text)}
+              style={styles.input}
+              mode="outlined"
+              outlineColor="#E5E7EB"
+              activeOutlineColor="#1CABE2"
+              placeholder="+233XXXXXXXXX or 0XXXXXXXXX"
+              keyboardType="phone-pad"
+            />
 
             {/* Accessibility */}
             <Text style={styles.sectionTitle}>Accessibility</Text>
