@@ -96,11 +96,15 @@ const startServer = async () => {
     await connectDB();
     
     // Initialize call queue (optional - only if Redis is available)
-    try {
-      require('./jobs/callQueue');
-      logger.info('📞 Call queue initialized');
-    } catch (error) {
-      logger.warn('Call queue not initialized (Redis may not be available):', error.message);
+    if (process.env.REDIS_URL || process.env.REDIS_HOST) {
+      try {
+        require('./jobs/callQueue');
+        logger.info('📞 Call queue initialized');
+      } catch (error) {
+        logger.warn('Call queue not initialized (Redis may not be available):', error.message);
+      }
+    } else {
+      logger.info('📞 Call queue disabled (no Redis configuration)');
     }
     
     // Start Express server

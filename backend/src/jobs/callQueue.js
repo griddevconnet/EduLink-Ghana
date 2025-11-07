@@ -8,15 +8,29 @@ const logger = require('../utils/logger');
  * Handles async call processing with BullMQ
  */
 
-// Redis connection
-const connection = {
-  host: process.env.REDIS_HOST || 'localhost',
-  port: process.env.REDIS_PORT || 6379,
-  password: process.env.REDIS_PASSWORD,
-};
+let callQueue = null;
+let callWorker = null;
 
-// Create call queue
-const callQueue = new Queue('calls', { connection });
+// Only initialize queue if Redis is available
+if (process.env.REDIS_URL || process.env.REDIS_HOST) {
+  try {
+    // Redis connection
+    const connection = {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: process.env.REDIS_PORT || 6379,
+      password: process.env.REDIS_PASSWORD,
+    };
+
+    // Create call queue
+    callQueue = new Queue('calls', { connection });
+    logger.info('Call queue initialized with Redis');
+  } catch (error) {
+    logger.warn('Failed to initialize call queue, running without job processing:', error.message);
+    callQueue = null;
+  }
+} else {
+  logger.warn('No Redis configuration found, running without job processing');
+}
 
 /**
  * Add absence call to queue
@@ -27,6 +41,11 @@ const callQueue = new Queue('calls', { connection });
  * @returns {Promise} Job
  */
 const queueAbsenceCall = async (studentId, attendanceId, contact, options = {}) => {
+  if (!callQueue) {
+    logger.warn('Call queue not available, skipping absence call for student:', studentId);
+    return { id: 'no-queue', status: 'skipped' };
+  }
+
   try {
     const job = await callQueue.add(
       'absence-followup',
@@ -114,69 +133,98 @@ const queueBulkCalls = async (calls) => {
   }
 };
 
-// Create worker to process jobs
-const callWorker = new Worker(
-  'calls',
-  async (job) => {
-    logger.info(`Processing job ${job.id}: ${job.name}`);
-    
-    try {
-      if (job.name === 'absence-followup') {
-        const { studentId, attendanceId, contact } = job.data;
+// Create worker to process jobs (only if queue exists)
+if (callQueue) {
+  try {
+    const connection = {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: process.env.REDIS_PORT || 6379,
+      password: process.env.REDIS_PASSWORD,
+    };
+
+    callWorker = new Worker(
+      'calls',
+      async (job) => {
+        logger.info(`Processing job ${job.id}: ${job.name}`);
         
-        // Get student and attendance
-        const student = await Student.findById(studentId).populate('school', 'name');
-        const attendance = await Attendance.findById(attendanceId);
-        
-        if (!student || !attendance) {
-          throw new Error('Student or attendance not found');
+        try {
+          if (job.name === 'absence-followup') {
+            const { studentId, attendanceId, contact } = job.data;
+            
+            // Get student and attendance
+            const student = await Student.findById(studentId).populate('school', 'name');
+            const attendance = await Attendance.findById(attendanceId);
+            
+            if (!student || !attendance) {
+              throw new Error('Student or attendance not found');
+            }
+            
+            // Initiate call
+            const result = await initiateAbsenceCall(student, attendance, contact);
+            
+            if (!result.success) {
+              throw new Error(result.error);
+            }
+            
+            return result;
+          } else if (job.name === 'retry-call') {
+            const { callLogId } = job.data;
+            
+            // TODO: Implement retry logic
+            logger.info(`Retrying call ${callLogId}`);
+            
+            return { success: true };
+          }
+        } catch (error) {
+          logger.error(`Job ${job.id} failed:`, error);
+          throw error;
         }
-        
-        // Initiate call
-        const result = await initiateAbsenceCall(student, attendance, contact);
-        
-        if (!result.success) {
-          throw new Error(result.error);
-        }
-        
-        return result;
-      } else if (job.name === 'retry-call') {
-        const { callLogId } = job.data;
-        
-        // TODO: Implement retry logic
-        logger.info(`Retrying call ${callLogId}`);
-        
-        return { success: true };
+      },
+      {
+        connection,
+        concurrency: 5, // Process 5 calls concurrently
       }
-    } catch (error) {
-      logger.error(`Job ${job.id} failed:`, error);
-      throw error;
-    }
-  },
-  {
-    connection,
-    concurrency: 5, // Process 5 calls concurrently
+    );
+    
+    logger.info('Call worker initialized successfully');
+  } catch (error) {
+    logger.warn('Failed to initialize call worker:', error.message);
+    callWorker = null;
   }
-);
+}
 
-// Worker event handlers
-callWorker.on('completed', (job) => {
-  logger.info(`Job ${job.id} completed successfully`);
-});
+// Worker event handlers (only if worker exists)
+if (callWorker) {
+  callWorker.on('completed', (job) => {
+    logger.info(`Job ${job.id} completed successfully`);
+  });
 
-callWorker.on('failed', (job, err) => {
-  logger.error(`Job ${job.id} failed:`, err);
-});
+  callWorker.on('failed', (job, err) => {
+    logger.error(`Job ${job.id} failed:`, err);
+  });
 
-callWorker.on('error', (err) => {
-  logger.error('Worker error:', err);
-});
+  callWorker.on('error', (err) => {
+    logger.error('Worker error:', err);
+  });
+}
 
 /**
  * Get queue statistics
  * @returns {Promise} Queue stats
  */
 const getQueueStats = async () => {
+  if (!callQueue) {
+    return {
+      waiting: 0,
+      active: 0,
+      completed: 0,
+      failed: 0,
+      delayed: 0,
+      total: 0,
+      status: 'queue_unavailable'
+    };
+  }
+
   try {
     const [waiting, active, completed, failed, delayed] = await Promise.all([
       callQueue.getWaitingCount(),
