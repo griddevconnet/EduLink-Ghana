@@ -144,8 +144,12 @@ const getStudents = async (req, res, next) => {
     if (school) {
       query.school = school;
     } else if (['teacher', 'headteacher'].includes(req.user.role) && req.user.school) {
-      // Teachers can only see their school's students
-      query.school = req.user.school;
+      // Teachers can see their school's students OR students they registered (orphaned students)
+      query.$or = [
+        { school: req.user.school },
+        { school: null, registeredBy: req.user._id },
+        { school: { $exists: false }, registeredBy: req.user._id }
+      ];
     }
     
     if (enrollmentStatus) query.enrollmentStatus = enrollmentStatus;
@@ -255,9 +259,24 @@ const getStudent = async (req, res, next) => {
     
     // Check access for teachers
     if (['teacher', 'headteacher'].includes(req.user.role)) {
-      if (!req.user.school || student.school?._id.toString() !== req.user.school.toString()) {
+      // Allow access if:
+      // 1. Student has no school assigned (orphaned student)
+      // 2. Student's school matches teacher's school
+      // 3. Student was registered by this teacher
+      const hasSchoolAccess = !student.school || 
+                             (req.user.school && student.school?._id.toString() === req.user.school.toString());
+      const isRegisteredByTeacher = student.registeredBy?.toString() === req.user._id.toString();
+      
+      if (!hasSchoolAccess && !isRegisteredByTeacher) {
         return forbidden(res, 'Access denied to this student');
       }
+    }
+    
+    // If student has no school but teacher has one, associate them
+    if (!student.school && req.user.school && student.enrollmentStatus === 'enrolled') {
+      student.school = req.user.school;
+      await student.save();
+      await student.populate('school', 'name region district');
     }
     
     success(res, { student });
