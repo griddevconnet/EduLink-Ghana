@@ -12,6 +12,7 @@ import RegisterScreen from '../screens/auth/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import StudentsScreen from '../screens/students/StudentsScreen';
 import StudentDetailScreen from '../screens/students/StudentDetailScreen';
+import AddStudentScreen from '../screens/students/AddStudentScreen';
 import AttendanceScreen from '../screens/attendance/AttendanceScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
@@ -152,6 +153,11 @@ function StudentsNavigator() {
         name="StudentDetail" 
         component={StudentDetailScreen}
         options={{ title: 'Student Details' }}
+      />
+      <Stack.Screen 
+        name="AddStudent" 
+        component={AddStudentScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
