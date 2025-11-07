@@ -276,15 +276,21 @@ export default function AttendanceScreen({ navigation }) {
       try {
         const { authAPI } = require('../../services/api');
         const currentProfile = await authAPI.getProfile();
+        // Extract user data - handle nested data structure
+        const userData = currentProfile.data?.data?.user || currentProfile.data?.user;
+        const userSchool = userData?.school;
+        const userSchoolId = userSchool?._id || userSchool;
+        
         console.log('Full profile response:', currentProfile);
         console.log('Profile response data:', currentProfile.data);
-        console.log('Current user profile:', currentProfile.data?.user);
-        console.log('Current user school:', currentProfile.data?.user?.school);
-        console.log('User school ID:', currentProfile.data?.user?.school?._id || currentProfile.data?.user?.school);
-        console.log('School ID match:', (currentProfile.data?.user?.school?._id || currentProfile.data?.user?.school) === schoolId);
+        console.log('Extracted user data:', userData);
+        console.log('Current user profile:', userData);
+        console.log('Current user school:', userSchool);
+        console.log('User school ID:', userSchoolId);
+        console.log('School ID match:', userSchoolId === schoolId);
         
         // If school doesn't match, try to fix it again
-        if (!currentProfile.data?.user?.school || (currentProfile.data?.user?.school?._id || currentProfile.data?.user?.school) !== schoolId) {
+        if (!userSchool || userSchoolId !== schoolId) {
           console.log('🔧 School mismatch detected! Attempting to fix again...');
           const updateResponse = await authAPI.updateProfile({
             school: schoolId
