@@ -104,6 +104,7 @@ export default function AttendanceScreen({ navigation }) {
 
   const toggleAttendance = (studentId, currentStatus) => {
     const newStatus = currentStatus === 'present' ? 'absent' : 'present';
+    console.log(`Toggling attendance for student ${studentId}: ${currentStatus} → ${newStatus}`);
     setAttendanceData(prev => ({
       ...prev,
       [studentId]: newStatus
@@ -130,6 +131,11 @@ export default function AttendanceScreen({ navigation }) {
     try {
       setSubmitting(true);
       
+      console.log('=== SUBMITTING ATTENDANCE ===');
+      console.log('Selected date:', selectedDate);
+      console.log('Students count:', students.length);
+      console.log('Attendance data state:', attendanceData);
+      
       const attendanceArray = students.map(student => ({
         student: student._id,
         date: selectedDate,
@@ -137,7 +143,13 @@ export default function AttendanceScreen({ navigation }) {
         markedBy: 'teacher', // This will be set by backend based on auth
       }));
 
-      await attendanceAPI.bulkMark(attendanceArray);
+      console.log('Attendance array to submit:', attendanceArray);
+      console.log('Present count in submission:', attendanceArray.filter(a => a.status === 'present').length);
+      console.log('Absent count in submission:', attendanceArray.filter(a => a.status === 'absent').length);
+
+      const response = await attendanceAPI.bulkMark(attendanceArray);
+      console.log('Bulk mark response:', response);
+      console.log('Attendance submission successful!');
       
       Alert.alert(
         'Success',
@@ -146,6 +158,8 @@ export default function AttendanceScreen({ navigation }) {
       
     } catch (error) {
       console.error('Error submitting attendance:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
       Alert.alert('Error', error.response?.data?.message || 'Failed to submit attendance');
     } finally {
       setSubmitting(false);
