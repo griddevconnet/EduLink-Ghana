@@ -34,19 +34,52 @@ const createStudent = async (req, res, next) => {
       registrationSource,
       notes,
       specialNeeds,
+      schoolName,
+      schoolLocation,
     } = req.body;
     
-    // Teachers can only create students for their school
-    if (['teacher', 'headteacher'].includes(req.user.role)) {
-      if (!req.user.school || req.user.school.toString() !== school) {
-        return forbidden(res, 'You can only create students for your school');
+    let schoolId = school;
+    
+    // If no school ID provided but schoolName is provided, try to find or create school
+    if (!schoolId && schoolName) {
+      // Try to find existing school by name
+      let existingSchool = await School.findOne({ 
+        name: { $regex: new RegExp(schoolName, 'i') } 
+      });
+      
+      if (!existingSchool) {
+        // Create new school if it doesn't exist
+        existingSchool = await School.create({
+          name: schoolName,
+          region: 'Greater Accra', // Default region
+          district: schoolLocation || 'Unknown District',
+          address: schoolLocation,
+          type: 'Primary',
+          ownership: 'Public',
+          active: true,
+        });
+        
+        // Associate the school with the user if they don't have one
+        if (!req.user.school) {
+          req.user.school = existingSchool._id;
+          await req.user.save();
+        }
       }
+      
+      schoolId = existingSchool._id;
+    }
+    
+    // For teachers/headteachers, use their associated school if no school provided
+    if (!schoolId && req.user.school) {
+      schoolId = req.user.school;
     }
     
     // Verify school exists
-    const schoolExists = await School.findById(school);
-    if (!schoolExists) {
-      return badRequest(res, 'School not found');
+    if (schoolId) {
+      const schoolExists = await School.findById(schoolId);
+      if (!schoolExists) {
+        return badRequest(res, 'School not found');
+      }
     }
     
     const student = await Student.create({
@@ -57,7 +90,7 @@ const createStudent = async (req, res, next) => {
       gender,
       disabilityStatus: disabilityStatus || 'None',
       disabilityDetails,
-      school: enrollmentStatus === 'enrolled' ? school : undefined,
+      school: enrollmentStatus === 'enrolled' ? schoolId : undefined,
       class: studentClass,
       studentId,
       enrollmentStatus: enrollmentStatus || 'enrolled',

@@ -19,6 +19,9 @@ import { useAuth } from '../../context/AuthContext';
 export default function AddStudentScreen({ navigation }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  
+  // Debug: Log user data to see what's available
+  console.log('Current user data:', user);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showYearPicker, setShowYearPicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -94,10 +97,6 @@ export default function AddStudentScreen({ navigation }) {
   };
 
   const validateForm = () => {
-    if (!user?.school) {
-      Alert.alert('Validation Error', 'No school associated with your account. Please contact administrator.');
-      return false;
-    }
     if (!formData.firstName.trim()) {
       Alert.alert('Validation Error', 'First name is required');
       return false;
@@ -145,7 +144,6 @@ export default function AddStudentScreen({ navigation }) {
         disabilityStatus: formData.disabilityStatus,
         enrollmentStatus: formData.enrollmentStatus,
         locationType: 'Rural', // Default for Ghana
-        school: user?.school, // Use teacher's school
         parentContacts: [
           {
             phone: formData.parentContact.trim(),
@@ -154,10 +152,15 @@ export default function AddStudentScreen({ navigation }) {
             preferredLanguage: formData.languageSpoken || 'English'
           }
         ],
-        // Additional fields for context (not in schema but might be useful)
+        // School information - let backend handle school creation/assignment
         schoolName: formData.schoolName.trim(),
         schoolLocation: formData.schoolLocation.trim() || undefined,
       };
+
+      // Only add school if user has one associated
+      if (user?.school) {
+        studentData.school = user.school;
+      }
 
       console.log('Submitting student data:', studentData);
       const response = await studentAPI.create(studentData);
