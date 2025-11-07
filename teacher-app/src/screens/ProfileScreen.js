@@ -50,12 +50,15 @@ export default function ProfileScreen() {
 
     setLoading(true);
     try {
+      console.log('Updating school with data:', schoolData);
       const response = await authAPI.updateProfile({
         schoolInfo: schoolData
       });
+      console.log('School update response:', response.data);
       
       // Refresh user data to get updated school information
-      await refreshUser();
+      const refreshResult = await refreshUser();
+      console.log('User refresh result:', refreshResult);
       
       Alert.alert(
         'Success!',

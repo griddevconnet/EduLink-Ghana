@@ -216,27 +216,51 @@ const updateMe = async (req, res, next) => {
     // Handle school setup
     if (schoolInfo) {
       const { School } = require('../models');
+      console.log('Updating school info:', schoolInfo);
+      console.log('User current school:', user.school);
       
-      // Try to find existing school by name
-      let school = await School.findOne({ 
-        name: { $regex: new RegExp(schoolInfo.name, 'i') } 
-      });
+      let school;
       
-      if (!school) {
-        // Create new school if it doesn't exist
-        school = await School.create({
-          name: schoolInfo.name,
-          region: schoolInfo.region || 'Greater Accra',
-          district: schoolInfo.district,
-          address: schoolInfo.address,
-          type: 'Primary',
-          ownership: 'Public',
-          active: true,
-        });
+      // If user already has a school, update it
+      if (user.school) {
+        school = await School.findById(user.school);
+        if (school) {
+          console.log('Updating existing school:', school._id);
+          // Update existing school
+          school.name = schoolInfo.name;
+          school.region = schoolInfo.region || 'Greater Accra';
+          school.district = schoolInfo.district;
+          school.address = schoolInfo.address;
+          await school.save();
+          console.log('School updated successfully:', school);
+        }
       }
       
-      // Associate school with user
-      user.school = school._id;
+      // If no existing school or school not found, create/find new one
+      if (!school) {
+        // Try to find existing school by name, region, and district
+        school = await School.findOne({ 
+          name: { $regex: new RegExp(schoolInfo.name, 'i') },
+          region: schoolInfo.region || 'Greater Accra',
+          district: schoolInfo.district
+        });
+        
+        if (!school) {
+          // Create new school if it doesn't exist
+          school = await School.create({
+            name: schoolInfo.name,
+            region: schoolInfo.region || 'Greater Accra',
+            district: schoolInfo.district,
+            address: schoolInfo.address,
+            type: 'Primary',
+            ownership: 'Public',
+            active: true,
+          });
+        }
+        
+        // Associate school with user
+        user.school = school._id;
+      }
     }
     
     await user.save();
