@@ -36,6 +36,8 @@ const createStudent = async (req, res, next) => {
       specialNeeds,
       schoolName,
       schoolLocation,
+      district,
+      region,
     } = req.body;
     
     let schoolId = school;
@@ -49,11 +51,14 @@ const createStudent = async (req, res, next) => {
       
       if (!existingSchool) {
         // Create new school if it doesn't exist
+        // Use district field if provided, otherwise fall back to schoolLocation
+        const schoolDistrict = district || schoolLocation || 'Unknown District';
+        
         existingSchool = await School.create({
           name: schoolName,
-          region: 'Greater Accra', // Default region
-          district: schoolLocation || 'Unknown District',
-          address: schoolLocation,
+          region: region || 'Greater Accra', // Use provided region or default
+          district: schoolDistrict,
+          address: schoolLocation || district,
           type: 'Primary',
           ownership: 'Public',
           active: true,

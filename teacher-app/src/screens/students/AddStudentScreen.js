@@ -36,7 +36,8 @@ export default function AddStudentScreen({ navigation }) {
     languageSpoken: '',
     class: '',
     schoolName: '',
-    schoolLocation: '',
+    district: '',
+    region: 'Greater Accra',
     disabilityStatus: 'None',
     enrollmentStatus: 'enrolled',
     // Parent Information
@@ -47,6 +48,11 @@ export default function AddStudentScreen({ navigation }) {
 
   const genderOptions = ['Male', 'Female', 'Other'];
   const languageOptions = ['English', 'Twi', 'Ga', 'Ewe', 'Dagbani', 'Fante', 'Hausa', 'Other'];
+  const regions = [
+    'Greater Accra', 'Ashanti', 'Western', 'Central', 'Eastern', 'Volta', 
+    'Northern', 'Upper East', 'Upper West', 'Brong-Ahafo', 'Western North',
+    'Ahafo', 'Bono East', 'Oti', 'Savannah', 'North East'
+  ];
   const disabilityOptions = ['None', 'Visual', 'Hearing', 'Physical', 'Cognitive', 'Multiple'];
 
   const updateField = (field, value) => {
@@ -156,7 +162,8 @@ export default function AddStudentScreen({ navigation }) {
         ],
         // School information - let backend handle school creation/assignment
         schoolName: formData.schoolName.trim(),
-        schoolLocation: formData.schoolLocation.trim() || undefined,
+        district: formData.district.trim() || undefined,
+        region: formData.region,
       };
 
       // Only add school if user has one associated
@@ -411,15 +418,39 @@ export default function AddStudentScreen({ navigation }) {
               placeholder="Accra Primary School"
             />
 
+            {/* Region Selector */}
+            <View style={styles.regionSelector}>
+              <Text style={styles.regionLabel}>Region</Text>
+              <View style={styles.regionChips}>
+                {regions.map((region) => (
+                  <TouchableOpacity
+                    key={region}
+                    onPress={() => updateField('region', region)}
+                    style={[
+                      styles.regionChip,
+                      formData.region === region && styles.regionChipSelected
+                    ]}
+                  >
+                    <Text style={[
+                      styles.regionChipText,
+                      formData.region === region && styles.regionChipTextSelected
+                    ]}>
+                      {region}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
             <TextInput
-              label="School Location"
-              value={formData.schoolLocation}
-              onChangeText={(text) => updateField('schoolLocation', text)}
+              label="District"
+              value={formData.district}
+              onChangeText={(text) => updateField('district', text)}
               style={styles.input}
               mode="outlined"
               outlineColor="#E5E7EB"
               activeOutlineColor="#1CABE2"
-              placeholder="Accra, Greater Accra Region"
+              placeholder="e.g., Accra Metropolitan"
             />
 
             <TextInput
@@ -702,6 +733,41 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#374785',
     textAlign: 'center',
+    fontWeight: '600',
+  },
+  regionSelector: {
+    marginBottom: 15,
+  },
+  regionLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374785',
+    marginBottom: 10,
+  },
+  regionChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  regionChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  regionChipSelected: {
+    backgroundColor: '#1CABE2',
+    borderColor: '#1CABE2',
+  },
+  regionChipText: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  regionChipTextSelected: {
+    color: '#FFFFFF',
     fontWeight: '600',
   },
 });
