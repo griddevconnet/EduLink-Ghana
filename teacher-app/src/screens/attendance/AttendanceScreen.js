@@ -44,15 +44,20 @@ export default function AttendanceScreen({ navigation }) {
       setLoading(true);
       
       // Load students
+      console.log('Loading students...');
       const studentsResponse = await studentAPI.getStudents();
       const studentsList = studentsResponse.data.students || [];
+      console.log('Students loaded:', studentsList.length);
       setStudents(studentsList);
 
       // Load existing attendance for selected date
+      console.log('Loading attendance for date:', selectedDate);
       const attendanceResponse = await attendanceAPI.getAttendance({
-        date: selectedDate,
+        startDate: selectedDate,
+        endDate: selectedDate,
         limit: 1000
       });
+      console.log('Attendance response:', attendanceResponse.data);
       
       // Convert attendance array to object for easy lookup
       const attendanceMap = {};
@@ -65,7 +70,11 @@ export default function AttendanceScreen({ navigation }) {
 
     } catch (error) {
       console.error('Error loading attendance data:', error);
-      Alert.alert('Error', 'Failed to load attendance data');
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
+      const errorMessage = error.response?.data?.message || 'Failed to load attendance data';
+      Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
     }
