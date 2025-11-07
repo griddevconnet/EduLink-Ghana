@@ -131,7 +131,20 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F5F5F5" />
+      <StatusBar barStyle="light-content" backgroundColor="#1CABE2" />
+      
+      {/* Header */}
+      <LinearGradient
+        colors={['#1CABE2', '#374785']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
+        <Text style={styles.headerTitle}>Dashboard</Text>
+        <Text style={styles.headerSubtitle}>
+          Welcome back, {user?.firstName || 'Teacher'}
+        </Text>
+      </LinearGradient>
       
       <ScrollView
         style={styles.scrollView}
@@ -306,6 +319,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F5F5F5',
   },
+  header: {
+    paddingTop: 50,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+  },
   scrollView: {
     flex: 1,
   },
@@ -314,7 +342,7 @@ const styles = StyleSheet.create({
   },
   attendanceCard: {
     margin: 15,
-    marginTop: 60,
+    marginTop: 15,
     borderRadius: 15,
     elevation: 8,
     overflow: 'hidden',
