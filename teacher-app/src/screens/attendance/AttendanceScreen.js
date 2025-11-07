@@ -460,6 +460,7 @@ export default function AttendanceScreen({ navigation }) {
       </ScrollView>
 
       {/* Submit FAB */}
+      {console.log('🔍 FAB Debug - Students length:', students.length, 'Should show FAB:', students.length > 0)}
       {students.length > 0 && (
         <FAB
           icon="content-save"
@@ -470,6 +471,21 @@ export default function AttendanceScreen({ navigation }) {
           style={styles.fab}
         />
       )}
+      
+      {/* Always show FAB for debugging */}
+      <FAB
+        icon="content-save"
+        label="Debug Save"
+        onPress={() => {
+          console.log('🔍 Debug FAB pressed!');
+          console.log('Students:', students.length);
+          console.log('Submitting:', submitting);
+          submitAttendance();
+        }}
+        loading={submitting}
+        disabled={submitting}
+        style={[styles.fab, { bottom: 80, backgroundColor: '#FF9800' }]}
+      />
     </View>
   );
 }
