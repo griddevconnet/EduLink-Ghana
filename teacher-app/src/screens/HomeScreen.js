@@ -37,8 +37,10 @@ export default function HomeScreen({ navigation }) {
 
   const loadDashboardData = async () => {
     try {
+      console.log('=== Loading HomeScreen Dashboard Data ===');
       // Load dashboard statistics from backend
       const today = new Date().toISOString().split('T')[0];
+      console.log('Loading data for date:', today);
       
       // Initialize default values
       let totalStudents = 0;
@@ -49,28 +51,52 @@ export default function HomeScreen({ navigation }) {
       
       // Get students count
       try {
-        const studentsResponse = await studentAPI.getStudents({ limit: 1 });
-        totalStudents = studentsResponse.data?.pagination?.total || 0;
+        const studentsResponse = await studentAPI.getStudents({ 
+          limit: 50, 
+          page: 1,
+          enrollmentStatus: 'enrolled'
+        });
+        console.log('Students API response:', studentsResponse.data);
+        
+        // Get students array and count
+        const studentsList = studentsResponse.data?.data?.students || studentsResponse.data?.students || [];
+        totalStudents = studentsList.length;
+        
+        // If there's pagination info, use total from there
+        if (studentsResponse.data?.total) {
+          totalStudents = studentsResponse.data.total;
+        } else if (studentsResponse.data?.data?.total) {
+          totalStudents = studentsResponse.data.data.total;
+        }
+        
+        console.log('Total students found:', totalStudents);
       } catch (err) {
         console.log('Could not fetch students:', err.message);
       }
       
       // Get today's attendance
       try {
-        const attendanceResponse = await attendanceAPI.getAttendance({ date: today });
+        const attendanceResponse = await attendanceAPI.getAttendance({ 
+          startDate: today,
+          endDate: today,
+          limit: 100
+        });
+        console.log('Attendance API response:', attendanceResponse.data);
         
         // The API returns: { data: { attendance: [], pagination: {} } }
-        const attendanceData = attendanceResponse.data?.data?.attendance || attendanceResponse.data?.attendance;
+        const attendanceData = attendanceResponse.data?.attendance || [];
         
         // Check if attendanceData is an array
         if (Array.isArray(attendanceData)) {
           presentToday = attendanceData.filter(a => a.status === 'present').length;
           absentToday = attendanceData.filter(a => a.status === 'absent').length;
+          console.log(`Attendance today: ${presentToday} present, ${absentToday} absent`);
         } else {
           console.log('No attendance records found for today');
         }
       } catch (err) {
         console.log('Could not fetch attendance:', err.message);
+        console.log('Attendance error details:', err.response?.data);
       }
       
       // Calculate attendance rate
@@ -81,13 +107,16 @@ export default function HomeScreen({ navigation }) {
       // For now, set to 0 or calculate based on available data
       atRisk = Math.floor(absentToday * 0.7); // Estimate: ~70% of absent students might be at risk
       
-      setStats({
+      const finalStats = {
         totalStudents,
         presentToday,
         absentToday,
         atRisk,
         attendanceRate,
-      });
+      };
+      
+      console.log('Final dashboard stats:', finalStats);
+      setStats(finalStats);
       
       // Set recent activity
       setRecentActivity([
