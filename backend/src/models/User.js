@@ -58,9 +58,7 @@ const userSchema = new mongoose.Schema(
     school: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'School',
-      required: function () {
-        return ['teacher', 'headteacher'].includes(this.role);
-      },
+      required: false, // Made optional for initial registration
     },
     
     // District/Region for officers
