@@ -23,7 +23,7 @@ function AuthNavigator() {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: '#4CAF50' },
+        headerStyle: { backgroundColor: '#1CABE2' },
         headerTintColor: '#fff',
         headerTitleStyle: { fontWeight: 'bold' },
       }}
@@ -62,9 +62,9 @@ function MainNavigator() {
 
           return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#4CAF50',
+        tabBarActiveTintColor: '#1CABE2',
         tabBarInactiveTintColor: 'gray',
-        headerStyle: { backgroundColor: '#4CAF50' },
+        headerStyle: { backgroundColor: '#1CABE2' },
         headerTintColor: '#fff',
         headerTitleStyle: { fontWeight: 'bold' },
       })}
@@ -72,7 +72,7 @@ function MainNavigator() {
       <Tab.Screen 
         name="Home" 
         component={HomeScreen}
-        options={{ title: 'Dashboard' }}
+        options={{ title: 'Dashboard', headerShown: false }}
       />
       <Tab.Screen 
         name="Students" 
@@ -98,7 +98,7 @@ function StudentsNavigator() {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: '#4CAF50' },
+        headerStyle: { backgroundColor: '#1CABE2' },
         headerTintColor: '#fff',
         headerTitleStyle: { fontWeight: 'bold' },
       }}

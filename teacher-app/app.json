@@ -23,8 +23,7 @@
       ],
       "adaptiveIcon": {
         "backgroundColor": "#1CABE2"
-      },
-      "newArchEnabled": false
+      }
     },
     "web": {
       "bundler": "metro"

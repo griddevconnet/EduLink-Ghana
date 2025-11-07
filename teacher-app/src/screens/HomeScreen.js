@@ -40,21 +40,48 @@ export default function HomeScreen({ navigation }) {
       // Load dashboard statistics from backend
       const today = new Date().toISOString().split('T')[0];
       
+      // Initialize default values
+      let totalStudents = 0;
+      let presentToday = 0;
+      let absentToday = 0;
+      let atRisk = 0;
+      let attendanceRate = 0;
+      
       // Get students count
-      const studentsResponse = await studentAPI.getStudents({ limit: 1 });
-      const totalStudents = studentsResponse.data?.pagination?.total || 0;
+      try {
+        const studentsResponse = await studentAPI.getStudents({ limit: 1 });
+        totalStudents = studentsResponse.data?.pagination?.total || 0;
+      } catch (err) {
+        console.log('Could not fetch students:', err.message);
+      }
       
       // Get today's attendance
-      const attendanceResponse = await attendanceAPI.getAttendance({ date: today });
-      const attendanceData = attendanceResponse.data?.data || [];
+      try {
+        const attendanceResponse = await attendanceAPI.getAttendance({ date: today });
+        const attendanceData = attendanceResponse.data?.data;
+        
+        // Check if attendanceData is an array
+        if (Array.isArray(attendanceData)) {
+          presentToday = attendanceData.filter(a => a.status === 'present').length;
+          absentToday = attendanceData.filter(a => a.status === 'absent').length;
+        } else {
+          console.log('Attendance data is not an array:', attendanceData);
+        }
+      } catch (err) {
+        console.log('Could not fetch attendance:', err.message);
+      }
       
-      const presentToday = attendanceData.filter(a => a.status === 'present').length;
-      const absentToday = attendanceData.filter(a => a.status === 'absent').length;
-      const attendanceRate = totalStudents > 0 ? Math.round((presentToday / totalStudents) * 100) : 0;
+      // Calculate attendance rate
+      attendanceRate = totalStudents > 0 ? Math.round((presentToday / totalStudents) * 100) : 0;
       
       // Get at-risk students (those with low attendance)
-      const atRiskResponse = await studentAPI.getAtRiskStudents();
-      const atRisk = atRiskResponse.data?.data?.length || 0;
+      try {
+        const atRiskResponse = await studentAPI.getAtRiskStudents();
+        const atRiskData = atRiskResponse.data?.data;
+        atRisk = Array.isArray(atRiskData) ? atRiskData.length : 0;
+      } catch (err) {
+        console.log('Could not fetch at-risk students:', err.message);
+      }
       
       setStats({
         totalStudents,
@@ -80,6 +107,11 @@ export default function HomeScreen({ navigation }) {
         atRisk: 0,
         attendanceRate: 0,
       });
+      setRecentActivity([
+        { icon: 'check-circle', text: 'No data available', time: 'Today', color: '#4CAF50' },
+        { icon: 'alert-circle', text: 'No data available', time: 'Today', color: '#FF9800' },
+        { icon: 'account-alert', text: 'No data available', time: 'This week', color: '#F44336' },
+      ]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -132,6 +164,7 @@ export default function HomeScreen({ navigation }) {
 
       <ScrollView
         style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl 
@@ -158,7 +191,7 @@ export default function HomeScreen({ navigation }) {
                   {stats.presentToday} of {stats.totalStudents} students
                 </Text>
               </View>
-              <MaterialCommunityIcons name="chart-donut" size={80} color="rgba(255,255,255,0.3)" />
+              <MaterialCommunityIcons name="chart-donut" size={70} color="rgba(255,255,255,0.3)" />
             </View>
           </LinearGradient>
         </Card>
@@ -170,7 +203,7 @@ export default function HomeScreen({ navigation }) {
             onPress={() => navigation.navigate('Students')}
           >
             <View style={styles.statIconContainer}>
-              <MaterialCommunityIcons name="account-group" size={32} color="#1976D2" />
+              <MaterialCommunityIcons name="account-group" size={26} color="#1976D2" />
             </View>
             <Text style={styles.statNumber}>{stats.totalStudents}</Text>
             <Text style={styles.statLabel}>Total Students</Text>
@@ -181,7 +214,7 @@ export default function HomeScreen({ navigation }) {
             onPress={() => navigation.navigate('Attendance')}
           >
             <View style={styles.statIconContainer}>
-              <MaterialCommunityIcons name="check-circle" size={32} color="#4CAF50" />
+              <MaterialCommunityIcons name="check-circle" size={26} color="#4CAF50" />
             </View>
             <Text style={styles.statNumber}>{stats.presentToday}</Text>
             <Text style={styles.statLabel}>Present Today</Text>
@@ -192,7 +225,7 @@ export default function HomeScreen({ navigation }) {
             onPress={() => navigation.navigate('Attendance')}
           >
             <View style={styles.statIconContainer}>
-              <MaterialCommunityIcons name="alert-circle" size={32} color="#FF9800" />
+              <MaterialCommunityIcons name="alert-circle" size={26} color="#FF9800" />
             </View>
             <Text style={styles.statNumber}>{stats.absentToday}</Text>
             <Text style={styles.statLabel}>Absent Today</Text>
@@ -203,7 +236,7 @@ export default function HomeScreen({ navigation }) {
             onPress={() => navigation.navigate('Students', { filter: 'atRisk' })}
           >
             <View style={styles.statIconContainer}>
-              <MaterialCommunityIcons name="alert" size={32} color="#F44336" />
+              <MaterialCommunityIcons name="alert" size={26} color="#F44336" />
             </View>
             <Text style={styles.statNumber}>{stats.atRisk}</Text>
             <Text style={styles.statLabel}>At Risk</Text>
@@ -286,11 +319,6 @@ export default function HomeScreen({ navigation }) {
           </Card>
         </View>
 
-        {/* UNICEF Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Powered by UNICEF × Ministry of Education</Text>
-          <Text style={styles.footerSubtext}>Ghana 🇬🇭</Text>
-        </View>
       </ScrollView>
     </View>
   );
@@ -349,15 +377,18 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    paddingBottom: 20,
+  },
   attendanceCard: {
     margin: 15,
-    marginTop: -30,
+    marginTop: 10,
     borderRadius: 15,
     elevation: 8,
     overflow: 'hidden',
   },
   attendanceGradient: {
-    padding: 20,
+    padding: 18,
   },
   attendanceContent: {
     flexDirection: 'row',
@@ -371,7 +402,7 @@ const styles = StyleSheet.create({
   },
   attendanceRate: {
     color: '#FFFFFF',
-    fontSize: 48,
+    fontSize: 42,
     fontWeight: 'bold',
     marginVertical: 5,
   },
@@ -389,28 +420,28 @@ const styles = StyleSheet.create({
   statCard: {
     width: (width - 50) / 2,
     margin: 7.5,
-    padding: 20,
-    borderRadius: 15,
+    padding: 15,
+    borderRadius: 12,
     elevation: 3,
     alignItems: 'center',
   },
   statIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: 'rgba(255,255,255,0.9)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   statNumber: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#374785',
-    marginVertical: 5,
+    marginVertical: 4,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#6B7280',
     textAlign: 'center',
   },
@@ -480,20 +511,5 @@ const styles = StyleSheet.create({
   activityTime: {
     fontSize: 12,
     color: '#6B7280',
-  },
-  footer: {
-    alignItems: 'center',
-    paddingVertical: 30,
-    marginTop: 20,
-  },
-  footerText: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginBottom: 4,
-  },
-  footerSubtext: {
-    fontSize: 14,
-    color: '#374785',
-    fontWeight: '600',
   },
 });
