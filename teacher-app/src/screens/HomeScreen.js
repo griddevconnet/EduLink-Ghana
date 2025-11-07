@@ -14,7 +14,7 @@ import { Card, ActivityIndicator, Avatar } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
-import { schoolAPI, studentAPI, attendanceAPI } from '../services/api';
+import { schoolAPI, studentAPI, attendanceAPI, healthCheck } from '../services/api';
 
 const { width } = Dimensions.get('window');
 
@@ -38,6 +38,14 @@ export default function HomeScreen({ navigation }) {
   const loadDashboardData = async () => {
     try {
       console.log('=== Loading HomeScreen Dashboard Data ===');
+      
+      // First, test backend connectivity
+      const healthStatus = await healthCheck();
+      if (!healthStatus.success) {
+        console.log('🚨 Backend is not reachable, skipping data load');
+        return;
+      }
+      
       // Load dashboard statistics from backend
       const today = new Date().toISOString().split('T')[0];
       console.log('Loading data for date:', today);

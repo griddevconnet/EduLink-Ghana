@@ -17,7 +17,12 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   async (config) => {
+    console.log(`🌐 Making API request to: ${config.baseURL}${config.url}`);
+    console.log('📋 Request method:', config.method?.toUpperCase());
+    console.log('📦 Request params:', config.params);
+    
     const token = await AsyncStorage.getItem('authToken');
+    console.log('🔑 Auth token exists:', !!token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -30,16 +35,43 @@ api.interceptors.request.use(
 
 // Response interceptor for error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`✅ API Success: ${response.config.method?.toUpperCase()} ${response.config.url}`);
+    console.log('📊 Response status:', response.status);
+    return response;
+  },
   async (error) => {
+    console.log(`❌ API Error: ${error.config?.method?.toUpperCase()} ${error.config?.url}`);
+    console.log('🚨 Error type:', error.code || error.message);
+    console.log('📡 Network error details:', {
+      message: error.message,
+      code: error.code,
+      status: error.response?.status,
+      statusText: error.response?.statusText
+    });
+    
     if (error.response?.status === 401) {
       // Token expired, logout user
+      console.log('🔐 Token expired, logging out user');
       await AsyncStorage.removeItem('authToken');
       await AsyncStorage.removeItem('userData');
     }
     return Promise.reject(error);
   }
 );
+
+// Health check function
+export const healthCheck = async () => {
+  try {
+    console.log('🏥 Testing backend connectivity...');
+    const response = await axios.get(`${BACKEND_URL}/health`, { timeout: 10000 });
+    console.log('✅ Backend is reachable:', response.status);
+    return { success: true, status: response.status };
+  } catch (error) {
+    console.log('❌ Backend health check failed:', error.message);
+    return { success: false, error: error.message };
+  }
+};
 
 // Auth APIs
 export const authAPI = {
