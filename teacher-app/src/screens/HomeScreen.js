@@ -81,19 +81,45 @@ export default function HomeScreen({ navigation }) {
           endDate: today,
           limit: 100
         });
-        console.log('Attendance API response:', attendanceResponse.data);
+        console.log('Full attendance API response:', JSON.stringify(attendanceResponse, null, 2));
+        console.log('Attendance response data:', attendanceResponse.data);
+        console.log('Attendance response structure keys:', Object.keys(attendanceResponse.data || {}));
         
-        // The API returns: { data: { attendance: [], pagination: {} } }
-        const attendanceData = attendanceResponse.data?.attendance || [];
+        // Try multiple possible data structures
+        let attendanceData = attendanceResponse.data?.attendance || 
+                           attendanceResponse.data?.data?.attendance || 
+                           attendanceResponse.data?.data || 
+                           [];
+        
+        console.log('Extracted attendance data:', attendanceData);
+        console.log('Is attendance data an array?', Array.isArray(attendanceData));
         
         // Check if attendanceData is an array
         if (Array.isArray(attendanceData)) {
+          console.log('Processing attendance array with', attendanceData.length, 'records');
+          
+          // Log each attendance record for debugging
+          attendanceData.forEach((record, index) => {
+            console.log(`Attendance record ${index}:`, record);
+          });
+          
           presentToday = attendanceData.filter(a => a.status === 'present').length;
           absentToday = attendanceData.filter(a => a.status === 'absent').length;
+          
           console.log(`Attendance today: ${presentToday} present, ${absentToday} absent`);
+          console.log('Present records:', attendanceData.filter(a => a.status === 'present'));
+          console.log('Absent records:', attendanceData.filter(a => a.status === 'absent'));
         } else {
-          console.log('No attendance records found for today');
+          console.log('Attendance data is not an array:', typeof attendanceData);
+          console.log('Attendance data value:', attendanceData);
         }
+        
+        // If no attendance data found, check if it's because no attendance was marked today
+        if (presentToday === 0 && absentToday === 0 && totalStudents > 0) {
+          console.log('⚠️ No attendance marked for today yet. Students exist but no attendance records found.');
+          console.log('💡 Suggestion: Go to Attendance tab to mark today\'s attendance');
+        }
+        
       } catch (err) {
         console.log('Could not fetch attendance:', err.message);
         console.log('Attendance error details:', err.response?.data);
