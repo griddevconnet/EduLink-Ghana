@@ -265,10 +265,33 @@ export default function AttendanceScreen({ navigation }) {
       };
 
       console.log('Attendance payload to submit:', attendancePayload);
-      console.log('School ID:', schoolId);
+      console.log('School ID being sent:', schoolId);
+      console.log('School ID type:', typeof schoolId);
       console.log('Records count:', attendanceRecords.length);
       console.log('Present count in submission:', attendanceRecords.filter(a => a.status === 'present').length);
       console.log('Absent count in submission:', attendanceRecords.filter(a => a.status === 'absent').length);
+      
+      // Check current user profile before submitting
+      console.log('🔍 Checking user profile before submission...');
+      try {
+        const { authAPI } = require('../../services/api');
+        const currentProfile = await authAPI.getProfile();
+        console.log('Current user profile:', currentProfile.data?.user);
+        console.log('Current user school:', currentProfile.data?.user?.school);
+        console.log('User school ID:', currentProfile.data?.user?.school?._id || currentProfile.data?.user?.school);
+        console.log('School ID match:', (currentProfile.data?.user?.school?._id || currentProfile.data?.user?.school) === schoolId);
+        
+        // If school doesn't match, try to fix it again
+        if (!currentProfile.data?.user?.school || (currentProfile.data?.user?.school?._id || currentProfile.data?.user?.school) !== schoolId) {
+          console.log('🔧 School mismatch detected! Attempting to fix again...');
+          const updateResponse = await authAPI.updateProfile({
+            school: schoolId
+          });
+          console.log('✅ School re-association result:', updateResponse.data);
+        }
+      } catch (profileErr) {
+        console.log('Could not fetch current profile:', profileErr.message);
+      }
 
       const response = await attendanceAPI.bulkMark(attendancePayload);
       console.log('Bulk mark response:', response);
