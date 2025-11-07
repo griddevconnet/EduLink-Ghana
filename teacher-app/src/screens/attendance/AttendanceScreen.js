@@ -297,20 +297,26 @@ export default function AttendanceScreen({ navigation }) {
           });
           console.log('✅ School re-association result:', updateResponse.data);
           
-          // CRITICAL: Refresh auth context to get new token with updated school
-          console.log('🔄 Refreshing auth context to get updated token...');
-          if (refreshUser) {
-            await refreshUser();
-            console.log('✅ Auth context refreshed');
-          }
-          
-          // Alert user that they need to try again
+          // Alert user that they need to log out and log back in
           Alert.alert(
-            'Profile Updated',
-            'Your school association has been updated. Please try submitting attendance again.',
-            [{ text: 'OK' }]
+            'Action Required',
+            'Your school has been associated with your account. Please log out and log back in for the changes to take effect, then try marking attendance again.',
+            [
+              {
+                text: 'Log Out Now',
+                onPress: () => {
+                  if (logout) {
+                    logout();
+                  }
+                }
+              },
+              {
+                text: 'Later',
+                style: 'cancel'
+              }
+            ]
           );
-          return; // Stop here, user needs to tap save again
+          return; // Stop here
         }
       } catch (profileErr) {
         console.log('Could not fetch current profile:', profileErr.message);
