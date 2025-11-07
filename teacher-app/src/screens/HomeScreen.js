@@ -131,35 +131,8 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1CABE2" />
+      <StatusBar barStyle="dark-content" backgroundColor="#F5F5F5" />
       
-      {/* Header with Gradient */}
-      <LinearGradient
-        colors={['#1CABE2', '#374785']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <View style={styles.headerContent}>
-          <View style={styles.headerLeft}>
-            <Avatar.Text 
-              size={50} 
-              label={user?.firstName?.charAt(0) || 'T'} 
-              style={styles.avatar}
-              color="#1CABE2"
-            />
-            <View style={styles.headerText}>
-              <Text style={styles.greeting}>Welcome back,</Text>
-              <Text style={styles.userName}>{user?.firstName || 'Teacher'}! 👋</Text>
-              <Text style={styles.schoolName}>{user?.school?.name || 'EduLink Ghana'}</Text>
-            </View>
-          </View>
-          <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-            <MaterialCommunityIcons name="cog" size={28} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
-
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -333,45 +306,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F5F5F5',
   },
-  header: {
-    paddingTop: 50,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  avatar: {
-    backgroundColor: '#FFFFFF',
-  },
-  headerText: {
-    marginLeft: 15,
-    flex: 1,
-  },
-  greeting: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    opacity: 0.9,
-  },
-  userName: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 2,
-  },
-  schoolName: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    opacity: 0.8,
-    marginTop: 2,
-  },
   scrollView: {
     flex: 1,
   },
@@ -380,7 +314,7 @@ const styles = StyleSheet.create({
   },
   attendanceCard: {
     margin: 15,
-    marginTop: 10,
+    marginTop: 60,
     borderRadius: 15,
     elevation: 8,
     overflow: 'hidden',
