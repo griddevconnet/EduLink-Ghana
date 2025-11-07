@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 20,
+    paddingBottom: 100, // Extra padding for floating nav bar
   },
   attendanceCard: {
     margin: 15,
