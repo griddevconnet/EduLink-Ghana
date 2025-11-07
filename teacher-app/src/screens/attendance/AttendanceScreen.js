@@ -45,9 +45,20 @@ export default function AttendanceScreen({ navigation }) {
       
       // Load students
       console.log('Loading students...');
-      const studentsResponse = await studentAPI.getStudents();
-      const studentsList = studentsResponse.data.students || [];
+      const params = {
+        limit: 50,
+        page: 1,
+        enrollmentStatus: 'enrolled'
+      };
+      
+      const studentsResponse = await studentAPI.getStudents(params);
+      console.log('Full students API response:', studentsResponse);
+      console.log('Students data structure:', studentsResponse.data);
+      
+      // Try different possible data structures like StudentsScreen does
+      const studentsList = studentsResponse.data?.data?.students || studentsResponse.data?.students || [];
       console.log('Students loaded:', studentsList.length);
+      console.log('Students array:', studentsList);
       setStudents(studentsList);
 
       // Only load attendance if there are students
