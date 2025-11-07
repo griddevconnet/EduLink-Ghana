@@ -140,10 +140,11 @@ export default function AttendanceScreen({ navigation }) {
       console.log('🧪 User school ID:', user?.school?._id || user?.school);
       
       // Test profile endpoint to see current user data
+      let profileResponse = null;
       try {
         console.log('🧪 Step 0.5: Fetching fresh user profile...');
         const { authAPI } = require('../../services/api');
-        const profileResponse = await authAPI.getProfile();
+        profileResponse = await authAPI.getProfile();
         console.log('🧪 Fresh profile data:', profileResponse.data);
         console.log('🧪 Fresh profile school:', profileResponse.data?.user?.school);
       } catch (profileError) {
@@ -182,7 +183,7 @@ export default function AttendanceScreen({ navigation }) {
       }
       
       // Check if backend user has school association
-      if (!profileResponse.data?.user?.school) {
+      if (!profileResponse?.data?.user?.school) {
         console.log('❌ Backend user has no school! Frontend has school but backend is missing.');
         console.log('🔧 Attempting to fix school association...');
         
