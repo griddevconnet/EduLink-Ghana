@@ -296,6 +296,21 @@ export default function AttendanceScreen({ navigation }) {
             school: schoolId
           });
           console.log('✅ School re-association result:', updateResponse.data);
+          
+          // CRITICAL: Refresh auth context to get new token with updated school
+          console.log('🔄 Refreshing auth context to get updated token...');
+          if (refreshUser) {
+            await refreshUser();
+            console.log('✅ Auth context refreshed');
+          }
+          
+          // Alert user that they need to try again
+          Alert.alert(
+            'Profile Updated',
+            'Your school association has been updated. Please try submitting attendance again.',
+            [{ text: 'OK' }]
+          );
+          return; // Stop here, user needs to tap save again
         }
       } catch (profileErr) {
         console.log('Could not fetch current profile:', profileErr.message);
