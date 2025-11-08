@@ -40,6 +40,18 @@ const authenticate = async (req, res, next) => {
       });
     }
     
+    // CRITICAL FIX: Use school from JWT token for authorization
+    // The JWT token is the source of truth for permissions
+    // This ensures immediate consistency after profile updates
+    if (decoded.school) {
+      // Override database school with JWT school
+      // Convert to ObjectId-like object for compatibility with existing code
+      user.school = {
+        _id: decoded.school,
+        toString: () => decoded.school
+      };
+    }
+    
     // Attach user to request
     req.user = user;
     next();
