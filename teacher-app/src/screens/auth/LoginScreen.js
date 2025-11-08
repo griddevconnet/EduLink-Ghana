@@ -23,16 +23,16 @@ import { useAuth } from '../../context/AuthContext';
 const { width, height } = Dimensions.get('window');
 
 export default function LoginScreen({ navigation }) {
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
   // Animations
-  const fadeAnim = new Animated.Value(0);
-  const slideAnim = new Animated.Value(50);
-  const scaleAnim = new Animated.Value(0.8);
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [slideAnim] = useState(new Animated.Value(50));
+  const [scaleAnim] = useState(new Animated.Value(0.8));
 
   const { login } = useAuth();
 
@@ -55,10 +55,10 @@ export default function LoginScreen({ navigation }) {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, slideAnim, scaleAnim]);
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!phone || !password) {
       setError('Please fill in all fields');
       return;
     }
@@ -66,13 +66,18 @@ export default function LoginScreen({ navigation }) {
     setLoading(true);
     setError('');
 
-    const result = await login(email, password);
+    try {
+      const result = await login(phone, password);
 
-    if (!result.success) {
-      setError(result.error);
+      if (!result.success) {
+        setError(result.error);
+      }
+    } catch (err) {
+      console.error('Login handler error:', err);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -137,13 +142,14 @@ export default function LoginScreen({ navigation }) {
               
               <View style={styles.inputContainer}>
                 <TextInput
-                  label="Email Address"
-                  value={email}
-                  onChangeText={setEmail}
+                  label="Phone Number"
+                  value={phone}
+                  onChangeText={setPhone}
                   mode="outlined"
-                  keyboardType="email-address"
+                  keyboardType="phone-pad"
                   autoCapitalize="none"
-                  left={<TextInput.Icon icon="email-outline" />}
+                  placeholder="+233XXXXXXXXX or 0XXXXXXXXX"
+                  left={<TextInput.Icon icon="phone-outline" />}
                   style={styles.input}
                   outlineStyle={{ borderRadius: 25 }}
                   theme={{
