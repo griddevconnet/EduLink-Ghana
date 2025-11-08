@@ -32,8 +32,29 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (phone, password) => {
     try {
+      console.log('🔐 Attempting login...');
       const response = await authAPI.login(phone, password);
-      const { token, user: userData } = response.data.data;
+      console.log('📦 Login response:', response);
+      console.log('📦 Response data:', response.data);
+      
+      // Handle different response structures
+      let token, userData;
+      
+      if (response.data?.data?.token && response.data?.data?.user) {
+        // Structure: { data: { token, user } }
+        token = response.data.data.token;
+        userData = response.data.data.user;
+      } else if (response.data?.token && response.data?.user) {
+        // Structure: { token, user }
+        token = response.data.token;
+        userData = response.data.user;
+      } else {
+        console.error('❌ Unexpected response structure:', response.data);
+        throw new Error('Invalid login response structure');
+      }
+
+      console.log('✅ Token extracted:', token ? 'Yes' : 'No');
+      console.log('✅ User data extracted:', userData ? 'Yes' : 'No');
 
       // Save to storage
       await AsyncStorage.setItem('authToken', token);
@@ -42,12 +63,14 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       setIsAuthenticated(true);
 
+      console.log('✅ Login successful!');
       return { success: true };
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('❌ Login error:', error);
+      console.error('❌ Error response:', error.response?.data);
       return {
         success: false,
-        error: error.response?.data?.message || 'Login failed',
+        error: error.response?.data?.message || error.message || 'Login failed',
       };
     }
   };
