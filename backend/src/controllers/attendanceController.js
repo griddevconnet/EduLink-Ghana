@@ -82,9 +82,24 @@ const bulkMarkAttendance = async (req, res, next) => {
     
     // Check school access
     if (['teacher', 'headteacher'].includes(req.user.role)) {
-      if (!req.user.school || req.user.school.toString() !== school) {
+      console.log('🔍 Bulk Attendance Authorization Check:');
+      console.log('  req.user.school:', req.user.school);
+      console.log('  req.user.school type:', typeof req.user.school);
+      console.log('  req.user.school._id:', req.user.school?._id);
+      console.log('  school from request:', school);
+      console.log('  school type:', typeof school);
+      
+      // Extract school ID for comparison
+      const userSchoolId = req.user.school?._id?.toString() || req.user.school?.toString() || req.user.school;
+      console.log('  userSchoolId after extraction:', userSchoolId);
+      console.log('  Match:', userSchoolId === school);
+      
+      if (!req.user.school || userSchoolId !== school) {
+        console.log('❌ School mismatch! Returning 403');
         return forbidden(res, 'You can only mark attendance for your school');
       }
+      
+      console.log('✅ School match! Proceeding with bulk mark');
     }
     
     const attendanceDate = date ? new Date(date) : new Date();
