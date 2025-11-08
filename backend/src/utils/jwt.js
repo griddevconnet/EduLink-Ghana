@@ -22,12 +22,19 @@ const generateToken = (payload, expiresIn = '7d') => {
  * @returns {String} JWT token
  */
 const generateAccessToken = (user) => {
+  const payload = {
+    userId: user._id,
+    role: user.role,
+    phone: user.phone,
+  };
+  
+  // Include school ID if user has a school
+  if (user.school) {
+    payload.school = user.school._id || user.school;
+  }
+  
   return generateToken(
-    {
-      userId: user._id,
-      role: user.role,
-      phone: user.phone,
-    },
+    payload,
     process.env.JWT_EXPIRES_IN || '7d'
   );
 };
