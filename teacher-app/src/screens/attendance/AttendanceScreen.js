@@ -506,6 +506,7 @@ export default function AttendanceScreen({ navigation }) {
       {/* Students List */}
       <ScrollView
         style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -645,6 +646,9 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollViewContent: {
+    paddingBottom: 100, // Space for FAB
+  },
   studentsList: {
     paddingHorizontal: 16,
     paddingBottom: 100,
@@ -723,5 +727,7 @@ const styles = StyleSheet.create({
     right: 16,
     bottom: 16,
     backgroundColor: '#1CABE2',
+    zIndex: 1000,
+    elevation: 8,
   },
 });
