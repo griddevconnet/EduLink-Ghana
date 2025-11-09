@@ -294,7 +294,7 @@ studentSchema.virtual('age').get(function () {
 
 // Virtual for verified contact count
 studentSchema.virtual('verifiedContactCount').get(function () {
-  return this.parentContacts.filter((c) => c.verified).length;
+  return this.parentContacts ? this.parentContacts.filter((c) => c.verified).length : 0;
 });
 
 // Instance method to check if student is out of school
@@ -305,6 +305,9 @@ studentSchema.methods.isOutOfSchool = function () {
 // Instance method to get primary contact
 studentSchema.methods.getPrimaryContact = function () {
   // Return first verified contact, or first contact if none verified
+  if (!this.parentContacts || this.parentContacts.length === 0) {
+    return null;
+  }
   const verified = this.parentContacts.find((c) => c.verified && !c.optedOut);
   return verified || this.parentContacts.find((c) => !c.optedOut) || this.parentContacts[0];
 };
