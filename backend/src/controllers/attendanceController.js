@@ -23,8 +23,7 @@ const markAttendance = async (req, res, next) => {
     
     // Check school access
     if (['teacher', 'headteacher'].includes(req.user.role)) {
-      const userSchoolId = req.user.school?._id?.toString() || req.user.school?.toString() || req.user.school;
-      if (!req.user.school || userSchoolId !== school) {
+      if (!req.user.school || req.user.school.toString() !== school) {
         return forbidden(res, 'You can only mark attendance for your school');
       }
     }
@@ -83,24 +82,9 @@ const bulkMarkAttendance = async (req, res, next) => {
     
     // Check school access
     if (['teacher', 'headteacher'].includes(req.user.role)) {
-      console.log('🔍 Bulk Attendance Authorization Check:');
-      console.log('  req.user.school:', req.user.school);
-      console.log('  req.user.school type:', typeof req.user.school);
-      console.log('  req.user.school._id:', req.user.school?._id);
-      console.log('  school from request:', school);
-      console.log('  school type:', typeof school);
-      
-      // Extract school ID for comparison
-      const userSchoolId = req.user.school?._id?.toString() || req.user.school?.toString() || req.user.school;
-      console.log('  userSchoolId after extraction:', userSchoolId);
-      console.log('  Match:', userSchoolId === school);
-      
-      if (!req.user.school || userSchoolId !== school) {
-        console.log('❌ School mismatch! Returning 403');
+      if (!req.user.school || req.user.school.toString() !== school) {
         return forbidden(res, 'You can only mark attendance for your school');
       }
-      
-      console.log('✅ School match! Proceeding with bulk mark');
     }
     
     const attendanceDate = date ? new Date(date) : new Date();
@@ -190,8 +174,7 @@ const getAttendance = async (req, res, next) => {
     
     // School filter for teachers
     if (['teacher', 'headteacher'].includes(req.user.role) && req.user.school) {
-      // Extract school ID (handles both ObjectId and our custom object from JWT)
-      query.school = req.user.school._id || req.user.school;
+      query.school = req.user.school;
     }
     
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -266,8 +249,7 @@ const getSchoolAttendanceByDate = async (req, res, next) => {
     
     // Check school access
     if (['teacher', 'headteacher'].includes(req.user.role)) {
-      const userSchoolId = req.user.school?._id?.toString() || req.user.school?.toString() || req.user.school;
-      if (!req.user.school || userSchoolId !== schoolId) {
+      if (!req.user.school || req.user.school.toString() !== schoolId) {
         return forbidden(res, 'Access denied to this school');
       }
     }
@@ -304,7 +286,7 @@ const getFollowUpRequired = async (req, res, next) => {
     
     let schoolId = school;
     if (['teacher', 'headteacher'].includes(req.user.role) && req.user.school) {
-      schoolId = req.user.school._id || req.user.school;
+      schoolId = req.user.school;
     }
     
     const attendance = await Attendance.findNeedingFollowUp(schoolId);
@@ -362,7 +344,7 @@ const getAbsenceStats = async (req, res, next) => {
     
     // School filter for teachers
     if (['teacher', 'headteacher'].includes(req.user.role) && req.user.school) {
-      filters.school = req.user.school._id || req.user.school;
+      filters.school = req.user.school;
     }
     
     const stats = await Attendance.getAbsenceStats(filters);
@@ -389,8 +371,7 @@ const updateAttendance = async (req, res, next) => {
     
     // Check school access
     if (['teacher', 'headteacher'].includes(req.user.role)) {
-      const userSchoolId = req.user.school?._id?.toString() || req.user.school?.toString() || req.user.school;
-      if (!req.user.school || attendance.school.toString() !== userSchoolId) {
+      if (!req.user.school || attendance.school.toString() !== req.user.school.toString()) {
         return forbidden(res, 'You can only update attendance for your school');
       }
     }

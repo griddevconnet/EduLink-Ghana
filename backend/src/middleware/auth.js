@@ -42,18 +42,16 @@ const authenticate = async (req, res, next) => {
     
     // CRITICAL FIX: Use school from JWT token for authorization
     // The JWT token is the source of truth for permissions
-    // This ensures immediate consistency after profile updates
+    // Convert Mongoose document to plain object to avoid issues
+    const userObj = user.toObject();
+    
+    // Override with JWT school if present
     if (decoded.school) {
-      // Override database school with JWT school
-      // Convert to ObjectId-like object for compatibility with existing code
-      user.school = {
-        _id: decoded.school,
-        toString: () => decoded.school
-      };
+      userObj.school = decoded.school;
     }
     
-    // Attach user to request
-    req.user = user;
+    // Attach plain user object to request
+    req.user = userObj;
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
