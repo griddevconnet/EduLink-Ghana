@@ -98,30 +98,34 @@ const bulkMarkAttendance = async (req, res, next) => {
     for (const record of records) {
       try {
         // Check if already exists
-        const existing = await Attendance.findOne({
+        let existing = await Attendance.findOne({
           student: record.student,
           date: attendanceDate,
         });
         
+        let attendance;
         if (existing) {
-          results.failed.push({
+          // Update existing record
+          existing.status = record.status || existing.status;
+          existing.reason = record.reason || existing.reason;
+          existing.reasonDetails = record.reasonDetails !== undefined ? record.reasonDetails : existing.reasonDetails;
+          existing.markedBy = req.user._id;
+          existing.notes = record.notes !== undefined ? record.notes : existing.notes;
+          attendance = await existing.save();
+        } else {
+          // Create new record
+          attendance = await Attendance.create({
             student: record.student,
-            error: 'Already marked',
+            school,
+            date: attendanceDate,
+            status: record.status || 'present',
+            reason: record.reason,
+            reasonDetails: record.reasonDetails,
+            markedBy: req.user._id,
+            source: 'teacher',
+            notes: record.notes,
           });
-          continue;
         }
-        
-        const attendance = await Attendance.create({
-          student: record.student,
-          school,
-          date: attendanceDate,
-          status: record.status || 'present',
-          reason: record.reason,
-          reasonDetails: record.reasonDetails,
-          markedBy: req.user._id,
-          source: 'teacher',
-          notes: record.notes,
-        });
         
         results.success.push(attendance._id);
       } catch (error) {
