@@ -9,6 +9,7 @@ import {
   RefreshControl,
   Dimensions,
 } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 import {
   Text,
   Card,
@@ -32,6 +33,7 @@ const { width } = Dimensions.get('window');
 
 export default function AttendanceScreen({ navigation }) {
   const { user } = useAuth();
+  const isFocused = useIsFocused();
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState([]);
   const [attendanceData, setAttendanceData] = useState({});
@@ -525,9 +527,9 @@ export default function AttendanceScreen({ navigation }) {
         )}
       </ScrollView>
 
-      {/* Save FAB */}
-      {console.log('🔍 Save FAB - Students:', students.length, 'Should show:', students.length > 0)}
-      {students.length > 0 && (
+      {/* Save FAB - Only show when screen is focused */}
+      {console.log('🔍 Save FAB - Students:', students.length, 'Focused:', isFocused, 'Should show:', students.length > 0 && isFocused)}
+      {students.length > 0 && isFocused && (
         <Portal>
           <FAB
             icon="content-save"
