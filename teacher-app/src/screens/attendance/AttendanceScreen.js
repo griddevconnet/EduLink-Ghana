@@ -19,6 +19,9 @@ import {
   Avatar,
   Divider,
   SegmentedButtons,
+  Snackbar,
+  Portal,
+  Dialog,
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -36,6 +39,10 @@ export default function AttendanceScreen({ navigation }) {
   const [viewMode, setViewMode] = useState('mark'); // 'mark' or 'history'
   const [refreshing, setRefreshing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarType, setSnackbarType] = useState('success'); // 'success' or 'error'
+  const [confirmDialogVisible, setConfirmDialogVisible] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -326,19 +333,37 @@ export default function AttendanceScreen({ navigation }) {
       console.log('Bulk mark response:', response);
       console.log('Attendance submission successful!');
       
-      Alert.alert(
-        'Success',
-        `Attendance marked for ${students.length} students on ${new Date(selectedDate).toLocaleDateString()}`
-      );
+      // Show success snackbar
+      setSnackbarMessage(`✓ Attendance saved for ${students.length} students`);
+      setSnackbarType('success');
+      setSnackbarVisible(true);
+      
+      // Reload data to reflect changes
+      await loadData();
       
     } catch (error) {
       console.error('Error submitting attendance:', error);
       console.error('Error response:', error.response?.data);
       console.error('Error status:', error.response?.status);
-      Alert.alert('Error', error.response?.data?.message || 'Failed to submit attendance');
+      
+      // Show error snackbar
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || 'Failed to submit attendance';
+      setSnackbarMessage(`✗ ${errorMsg}`);
+      setSnackbarType('error');
+      setSnackbarVisible(true);
     } finally {
       setSubmitting(false);
     }
+  };
+  
+  const handleSavePress = () => {
+    // Show confirmation dialog
+    setConfirmDialogVisible(true);
+  };
+  
+  const confirmSave = () => {
+    setConfirmDialogVisible(false);
+    submitAttendance();
   };
 
   const getAttendanceStats = () => {
@@ -478,18 +503,6 @@ export default function AttendanceScreen({ navigation }) {
         </Button>
       </View>
 
-      {/* Test Button */}
-      <View style={styles.testSection}>
-        <Button
-          mode="contained"
-          onPress={testBackendConnection}
-          style={styles.testButton}
-          icon="test-tube"
-        >
-          Test Backend Connection
-        </Button>
-      </View>
-
       {/* Students List */}
       <ScrollView
         style={styles.scrollView}
@@ -511,33 +524,48 @@ export default function AttendanceScreen({ navigation }) {
         )}
       </ScrollView>
 
-      {/* Submit FAB */}
-      {console.log('🔍 FAB Debug - Students length:', students.length, 'Should show FAB:', students.length > 0)}
+      {/* Save FAB */}
       {students.length > 0 && (
         <FAB
           icon="content-save"
           label="Save Attendance"
-          onPress={submitAttendance}
+          onPress={handleSavePress}
           loading={submitting}
           disabled={submitting}
           style={styles.fab}
         />
       )}
       
-      {/* Always show FAB for debugging */}
-      <FAB
-        icon="content-save"
-        label="Debug Save"
-        onPress={() => {
-          console.log('🔍 Debug FAB pressed!');
-          console.log('Students:', students.length);
-          console.log('Submitting:', submitting);
-          submitAttendance();
+      {/* Confirmation Dialog */}
+      <Portal>
+        <Dialog visible={confirmDialogVisible} onDismiss={() => setConfirmDialogVisible(false)}>
+          <Dialog.Title>Confirm Save</Dialog.Title>
+          <Dialog.Content>
+            <Text>Save attendance for {students.length} students on {new Date(selectedDate).toLocaleDateString()}?</Text>
+            <Text style={{ marginTop: 10, color: '#666' }}>
+              Present: {Object.values(attendanceData).filter(s => s === 'present').length}
+              {' • '}
+              Absent: {students.length - Object.values(attendanceData).filter(s => s === 'present').length}
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setConfirmDialogVisible(false)}>Cancel</Button>
+            <Button onPress={confirmSave} mode="contained">Save</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+      
+      {/* Success/Error Snackbar */}
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={3000}
+        style={{
+          backgroundColor: snackbarType === 'success' ? '#4CAF50' : '#F44336'
         }}
-        loading={submitting}
-        disabled={submitting}
-        style={[styles.fab, { bottom: 80, backgroundColor: '#FF9800' }]}
-      />
+      >
+        {snackbarMessage}
+      </Snackbar>
     </View>
   );
 }
