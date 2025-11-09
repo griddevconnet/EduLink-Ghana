@@ -525,16 +525,16 @@ export default function AttendanceScreen({ navigation }) {
       </ScrollView>
 
       {/* Save FAB */}
-      {students.length > 0 && (
-        <FAB
-          icon="content-save"
-          label="Save Attendance"
-          onPress={handleSavePress}
-          loading={submitting}
-          disabled={submitting}
-          style={styles.fab}
-        />
-      )}
+      {console.log('🔍 Save FAB - Students:', students.length, 'Should show:', students.length > 0)}
+      <FAB
+        icon="content-save"
+        label="Save Attendance"
+        onPress={handleSavePress}
+        loading={submitting}
+        disabled={submitting || students.length === 0}
+        style={styles.fab}
+        visible={students.length > 0}
+      />
       
       {/* Confirmation Dialog */}
       <Portal>
