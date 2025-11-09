@@ -728,7 +728,7 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: 16,
-    bottom: 16,
+    bottom: 80, // Adjusted to sit above bottom navigation (standard nav height ~56-65px + margin)
     backgroundColor: '#1CABE2',
     zIndex: 1000,
     elevation: 8,
