@@ -461,6 +461,51 @@ All endpoints return consistent error responses:
 ### Bulk Mark Attendance
 **POST** `/api/attendance/bulk`
 
+Bulk mark attendance for a list of students for a given date and school.
+
+This endpoint is idempotent per student per date:
+- If a record for a student on the specified date already exists, it will be **updated** (status/reason/notes) instead of failing.
+- If no record exists, a new attendance record will be **created**.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "school": "690e170dbbdd991d0e263979",
+  "date": "2025-11-09",
+  "records": [
+    { "student": "690e244bb66a8103cbc1494d", "status": "present" },
+    { "student": "690e244bb66a8103cbc1494e", "status": "absent", "reason": "unknown", "reasonDetails": "No reason provided" }
+  ]
+}
+```
+
+Notes:
+- `status` is one of: `present`, `absent`, `excused`, `late`
+- `reason` is optional when `status` != `absent`; recommended when `absent`
+- Teachers/headteachers can only submit for their own school
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Bulk attendance processed",
+  "data": {
+    "success": ["6910dc2ade1cca11f6006443", "6910dc2ade1cca11f6006444"],
+    "failed": [
+      { "student": "690e244bb66a8103cbc1494f", "error": "Student not found" }
+    ]
+  }
+}
+```
+
+Error cases return standard error format with `success: false` and `error` message.
+
 ### Get Follow-up Required
 **GET** `/api/attendance/follow-up?school=:id`
 

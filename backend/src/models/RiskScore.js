@@ -200,7 +200,6 @@ const riskScoreSchema = new mongoose.Schema(
 );
 
 // Indexes
-riskScoreSchema.index({ student: 1 });
 riskScoreSchema.index({ riskLevel: 1 });
 riskScoreSchema.index({ riskScore: -1 });
 riskScoreSchema.index({ interventionRecommended: 1, interventionApplied: 1 });
