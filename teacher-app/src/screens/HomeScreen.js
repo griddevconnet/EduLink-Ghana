@@ -14,7 +14,7 @@ import { Card, ActivityIndicator, Avatar } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
-import { schoolAPI, studentAPI, attendanceAPI, healthCheck } from '../services/api';
+import { schoolAPI, studentAPI, attendanceAPI, riskAPI, healthCheck } from '../services/api';
 
 const { width } = Dimensions.get('window');
 
@@ -30,6 +30,7 @@ export default function HomeScreen({ navigation }) {
     attendanceRate: 0,
   });
   const [recentActivity, setRecentActivity] = useState([]);
+  const [atRiskStudents, setAtRiskStudents] = useState([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -176,10 +177,21 @@ export default function HomeScreen({ navigation }) {
       // Calculate attendance rate
       attendanceRate = totalStudents > 0 ? Math.round((presentToday / totalStudents) * 100) : 0;
       
-      // Get at-risk students (calculate from attendance data)
-      // Since the at-risk endpoint doesn't exist, we'll calculate it differently
-      // For now, set to 0 or calculate based on available data
-      atRisk = Math.floor(absentToday * 0.7); // Estimate: ~70% of absent students might be at risk
+      // Get at-risk students from risk API
+      try {
+        const riskResponse = await riskAPI.getAtRiskStudents({ 
+          minRiskLevel: 'medium',
+          limit: 10 
+        });
+        const riskData = riskResponse.data?.data?.riskScores || [];
+        setAtRiskStudents(riskData);
+        atRisk = riskResponse.data?.data?.pagination?.total || riskData.length;
+        console.log('At-risk students:', atRisk);
+      } catch (err) {
+        console.log('Could not fetch at-risk students:', err.message);
+        // Fallback estimate
+        atRisk = Math.floor(absentToday * 0.7);
+      }
       
       const finalStats = {
         totalStudents,
@@ -222,6 +234,26 @@ export default function HomeScreen({ navigation }) {
   const onRefresh = () => {
     setRefreshing(true);
     loadDashboardData();
+  };
+
+  const getRiskColor = (riskLevel) => {
+    switch (riskLevel) {
+      case 'critical': return '#D32F2F';
+      case 'high': return '#F44336';
+      case 'medium': return '#FF9800';
+      case 'low': return '#4CAF50';
+      default: return '#9E9E9E';
+    }
+  };
+
+  const getRiskIcon = (riskLevel) => {
+    switch (riskLevel) {
+      case 'critical': return 'alert-octagon';
+      case 'high': return 'alert';
+      case 'medium': return 'alert-circle';
+      case 'low': return 'check-circle';
+      default: return 'help-circle';
+    }
   };
 
   if (loading) {
@@ -387,6 +419,69 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* At-Risk Students */}
+        {atRiskStudents.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>At-Risk Students</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Students', { filter: 'atRisk' })}>
+                <Text style={styles.seeAllText}>See All</Text>
+              </TouchableOpacity>
+            </View>
+            {atRiskStudents.map((riskScore, index) => (
+              <TouchableOpacity
+                key={riskScore._id || index}
+                onPress={() => navigation.navigate('Students', {
+                  screen: 'StudentDetail',
+                  params: { studentId: riskScore.student?._id }
+                })}
+              >
+                <Card style={styles.riskCard}>
+                  <Card.Content style={styles.riskCardContent}>
+                    <View style={styles.riskLeft}>
+                      <Avatar.Text 
+                        size={40} 
+                        label={`${riskScore.student?.firstName?.[0] || ''}${riskScore.student?.lastName?.[0] || ''}`}
+                        style={[
+                          styles.riskAvatar,
+                          { backgroundColor: getRiskColor(riskScore.riskLevel) }
+                        ]}
+                      />
+                      <View style={styles.riskInfo}>
+                        <Text style={styles.riskName}>
+                          {riskScore.student?.firstName} {riskScore.student?.lastName}
+                        </Text>
+                        <Text style={styles.riskClass}>Class {riskScore.student?.class}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.riskRight}>
+                      <View style={[
+                        styles.riskBadge,
+                        { backgroundColor: getRiskColor(riskScore.riskLevel) + '20' }
+                      ]}>
+                        <MaterialCommunityIcons 
+                          name={getRiskIcon(riskScore.riskLevel)} 
+                          size={16} 
+                          color={getRiskColor(riskScore.riskLevel)} 
+                        />
+                        <Text style={[
+                          styles.riskBadgeText,
+                          { color: getRiskColor(riskScore.riskLevel) }
+                        ]}>
+                          {riskScore.riskLevel.charAt(0).toUpperCase() + riskScore.riskLevel.slice(1)}
+                        </Text>
+                      </View>
+                      <Text style={styles.riskScore}>
+                        {Math.round(riskScore.riskScore * 100)}%
+                      </Text>
+                    </View>
+                  </Card.Content>
+                </Card>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         {/* Recent Activity */}
         <View style={styles.section}>
@@ -574,5 +669,69 @@ const styles = StyleSheet.create({
   activityTime: {
     fontSize: 12,
     color: '#6B7280',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  seeAllText: {
+    fontSize: 14,
+    color: '#1CABE2',
+    fontWeight: '600',
+  },
+  riskCard: {
+    marginBottom: 10,
+    borderRadius: 12,
+    elevation: 2,
+  },
+  riskCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+  },
+  riskLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  riskAvatar: {
+    marginRight: 12,
+  },
+  riskInfo: {
+    flex: 1,
+  },
+  riskName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374785',
+  },
+  riskClass: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  riskRight: {
+    alignItems: 'flex-end',
+  },
+  riskBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 4,
+  },
+  riskBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  riskScore: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
   },
 });

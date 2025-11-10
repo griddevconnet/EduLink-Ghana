@@ -170,6 +170,21 @@ export const assessmentAPI = {
     api.get('/api/assessments/intervention-needed', { params }),
 };
 
+// Risk Assessment APIs
+export const riskAPI = {
+  getAtRiskStudents: (params) =>
+    api.get('/api/risk/at-risk', { params }),
+  
+  getRiskScore: (studentId) =>
+    api.get(`/api/risk/student/${studentId}`),
+  
+  calculateRiskScore: (studentId) =>
+    api.post(`/api/risk/calculate/${studentId}`),
+  
+  bulkCalculate: (schoolId) =>
+    api.post('/api/risk/bulk-calculate', { schoolId }),
+};
+
 // AI APIs
 const aiAPI = axios.create({
   baseURL: AI_URL,
