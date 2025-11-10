@@ -17,6 +17,7 @@ import AttendanceScreen from '../screens/attendance/AttendanceScreen';
 import AttendanceHistoryScreen from '../screens/attendance/AttendanceHistoryScreen';
 import FollowUpScreen from '../screens/FollowUpScreen';
 import CallLogScreen from '../screens/CallLogScreen';
+import AssessmentScreen from '../screens/AssessmentScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
 const Stack = createStackNavigator();
@@ -219,6 +220,11 @@ function StudentsNavigator() {
         name="CallLog" 
         component={CallLogScreen}
         options={{ title: 'Call Logs', headerShown: false }}
+      />
+      <Stack.Screen 
+        name="Assessment" 
+        component={AssessmentScreen}
+        options={{ title: 'Learning Assessments', headerShown: false }}
       />
     </Stack.Navigator>
   );
