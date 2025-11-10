@@ -153,6 +153,9 @@ export const attendanceAPI = {
   
   getFollowUpRequired: (params) =>
     api.get('/api/attendance/follow-up', { params }),
+  
+  completeFollowUp: (attendanceId, data) =>
+    api.post(`/api/attendance/${attendanceId}/complete-followup`, data),
 };
 
 // Assessment APIs

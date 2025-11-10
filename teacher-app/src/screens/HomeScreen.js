@@ -394,27 +394,27 @@ export default function HomeScreen({ navigation }) {
 
             <TouchableOpacity 
               style={styles.actionButton}
-              onPress={() => navigation.navigate('Reports')}
-            >
-              <LinearGradient
-                colors={['#4CAF50', '#388E3C']}
-                style={styles.actionGradient}
-              >
-                <MaterialCommunityIcons name="chart-bar" size={28} color="#FFFFFF" />
-                <Text style={styles.actionText}>View{"\n"}Reports</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => navigation.navigate('Calls')}
+              onPress={() => navigation.navigate('FollowUp')}
             >
               <LinearGradient
                 colors={['#FF9800', '#F57C00']}
                 style={styles.actionGradient}
               >
-                <MaterialCommunityIcons name="phone" size={28} color="#FFFFFF" />
-                <Text style={styles.actionText}>Parent{"\n"}Calls</Text>
+                <MaterialCommunityIcons name="phone-alert" size={28} color="#FFFFFF" />
+                <Text style={styles.actionText}>Follow-Up{"\n"}Queue</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => navigation.navigate('Attendance', { screen: 'AttendanceHistory' })}
+            >
+              <LinearGradient
+                colors={['#4CAF50', '#388E3C']}
+                style={styles.actionGradient}
+              >
+                <MaterialCommunityIcons name="history" size={28} color="#FFFFFF" />
+                <Text style={styles.actionText}>Attendance{"\n"}History</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>

@@ -15,6 +15,7 @@ import StudentDetailScreen from '../screens/students/StudentDetailScreen';
 import AddStudentScreen from '../screens/students/AddStudentScreen';
 import AttendanceScreen from '../screens/attendance/AttendanceScreen';
 import AttendanceHistoryScreen from '../screens/attendance/AttendanceHistoryScreen';
+import FollowUpScreen from '../screens/FollowUpScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
 const Stack = createStackNavigator();
@@ -98,7 +99,7 @@ function MainNavigator() {
     >
       <Tab.Screen 
         name="Home" 
-        component={HomeScreen}
+        component={HomeNavigator}
         options={{ 
           title: 'Home',
           headerShown: false,
@@ -132,6 +133,30 @@ function MainNavigator() {
         }}
       />
     </Tab.Navigator>
+  );
+}
+
+// Home Stack Navigator
+function HomeNavigator() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: '#1CABE2' },
+        headerTintColor: '#fff',
+        headerTitleStyle: { fontWeight: 'bold' },
+      }}
+    >
+      <Stack.Screen 
+        name="Dashboard" 
+        component={HomeScreen}
+        options={{ title: 'Home', headerShown: false }}
+      />
+      <Stack.Screen 
+        name="FollowUp" 
+        component={FollowUpScreen}
+        options={{ title: 'Follow-Up Queue', headerShown: false }}
+      />
+    </Stack.Navigator>
   );
 }
 
