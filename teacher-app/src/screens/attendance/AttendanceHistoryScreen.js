@@ -65,19 +65,26 @@ export default function AttendanceHistoryScreen({ navigation }) {
         endDate.toISOString().split('T')[0]
       );
 
-      console.log('📊 Attendance history response:', response.data);
+      console.log('📊 Attendance history response:', JSON.stringify(response.data, null, 2));
       
       // Handle different response structures
       let records = [];
-      if (Array.isArray(response.data)) {
-        records = response.data;
-      } else if (Array.isArray(response.data?.data)) {
-        records = response.data.data;
+      if (response.data?.data?.attendance && Array.isArray(response.data.data.attendance)) {
+        // Structure: { success: true, data: { attendance: [...], pagination: {...} } }
+        records = response.data.data.attendance;
       } else if (response.data?.attendance && Array.isArray(response.data.attendance)) {
+        // Structure: { attendance: [...], pagination: {...} }
         records = response.data.attendance;
+      } else if (Array.isArray(response.data?.data)) {
+        // Structure: { data: [...] }
+        records = response.data.data;
+      } else if (Array.isArray(response.data)) {
+        // Direct array
+        records = response.data;
       }
       
       console.log('📋 Processed records:', records.length);
+      console.log('📋 Sample record:', records[0]);
       setAttendanceRecords(records);
       calculateStats(records);
     } catch (error) {
