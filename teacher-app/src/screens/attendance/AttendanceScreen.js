@@ -20,6 +20,7 @@ import {
   Avatar,
   Divider,
   SegmentedButtons,
+  IconButton,
   Snackbar,
   Portal,
   Dialog,
@@ -367,16 +368,26 @@ export default function AttendanceScreen({ navigation }) {
     setConfirmDialogVisible(false);
     submitAttendance();
   };
-
+  
+  const changeDateBy = (delta) => {
+    const d = new Date(selectedDate);
+    d.setDate(d.getDate() + delta);
+    setSelectedDate(d.toISOString().split('T')[0]);
+  };
+  
+  const setToday = () => {
+    setSelectedDate(new Date().toISOString().split('T')[0]);
+  };
+  
   const getAttendanceStats = () => {
     const totalStudents = students.length;
     const presentCount = Object.values(attendanceData).filter(status => status === 'present').length;
     const absentCount = totalStudents - presentCount;
     const attendanceRate = totalStudents > 0 ? ((presentCount / totalStudents) * 100).toFixed(1) : 0;
-
+    
     return { totalStudents, presentCount, absentCount, attendanceRate };
   };
-
+  
   const renderStudent = (student) => {
     const status = attendanceData[student._id];
     const isPresent = status === 'present';
@@ -460,6 +471,27 @@ export default function AttendanceScreen({ navigation }) {
           </Text>
         </View>
       </LinearGradient>
+
+      {/* Date Controls */}
+      <View style={styles.dateControls}>
+        <IconButton
+          icon="chevron-left"
+          size={28}
+          onPress={() => changeDateBy(-1)}
+        />
+        <Button onPress={setToday} mode="text" style={styles.dateButton}>
+          {new Date(selectedDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })}
+        </Button>
+        <IconButton
+          icon="chevron-right"
+          size={28}
+          onPress={() => changeDateBy(1)}
+        />
+      </View>
 
       {/* Stats Card */}
       <Card style={styles.statsCard}>
@@ -610,6 +642,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFFFFF',
     opacity: 0.9,
+  },
+  dateControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  dateButton: {
+    marginHorizontal: 8,
   },
   statsCard: {
     margin: 16,
