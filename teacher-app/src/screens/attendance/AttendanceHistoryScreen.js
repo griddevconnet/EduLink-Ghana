@@ -18,7 +18,7 @@ import {
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import attendanceAPI from '../../services/api/attendance';
+import { attendanceAPI } from '../../services/api';
 
 export default function AttendanceHistoryScreen({ navigation }) {
   const { user } = useAuth();

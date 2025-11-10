@@ -141,6 +141,16 @@ export const attendanceAPI = {
   getByStudent: (studentId, params) =>
     api.get(`/api/attendance/student/${studentId}`, { params }),
   
+  getByDateRange: (startDate, endDate, params = {}) =>
+    api.get('/api/attendance', { 
+      params: { 
+        ...params,
+        startDate, 
+        endDate,
+        populate: 'student',
+      } 
+    }),
+  
   getFollowUpRequired: (params) =>
     api.get('/api/attendance/follow-up', { params }),
 };
