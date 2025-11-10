@@ -40,14 +40,20 @@ const authenticate = async (req, res, next) => {
       });
     }
     
-    // CRITICAL FIX: Use school from JWT token for authorization
+    // CRITICAL FIX: Use JWT token data for authorization
     // The JWT token is the source of truth for permissions
     // Convert Mongoose document to plain object to avoid issues
     const userObj = user.toObject();
     
-    // Override with JWT school if present
+    // Override with JWT data if present (JWT is source of truth)
+    if (decoded.role) {
+      userObj.role = decoded.role;
+    }
     if (decoded.school) {
       userObj.school = decoded.school;
+    }
+    if (decoded.userId) {
+      userObj.userId = decoded.userId;
     }
     
     // Attach plain user object to request
