@@ -65,11 +65,25 @@ export default function AttendanceHistoryScreen({ navigation }) {
         endDate.toISOString().split('T')[0]
       );
 
-      const records = response.data?.data || [];
+      console.log('📊 Attendance history response:', response.data);
+      
+      // Handle different response structures
+      let records = [];
+      if (Array.isArray(response.data)) {
+        records = response.data;
+      } else if (Array.isArray(response.data?.data)) {
+        records = response.data.data;
+      } else if (response.data?.attendance && Array.isArray(response.data.attendance)) {
+        records = response.data.attendance;
+      }
+      
+      console.log('📋 Processed records:', records.length);
       setAttendanceRecords(records);
       calculateStats(records);
     } catch (error) {
       console.error('Error loading attendance history:', error);
+      console.error('Error details:', error.response?.data || error.message);
+      setAttendanceRecords([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -77,12 +91,25 @@ export default function AttendanceHistoryScreen({ navigation }) {
   };
 
   const calculateStats = (records) => {
+    // Safety check
+    if (!Array.isArray(records) || records.length === 0) {
+      setStats({
+        totalDays: 0,
+        presentCount: 0,
+        absentCount: 0,
+        attendanceRate: 0,
+      });
+      return;
+    }
+
     // Group by date to get unique days
     const dateMap = {};
     let presentCount = 0;
     let absentCount = 0;
 
     records.forEach((record) => {
+      if (!record || !record.date) return; // Skip invalid records
+      
       const dateKey = record.date.split('T')[0];
       if (!dateMap[dateKey]) {
         dateMap[dateKey] = { present: 0, absent: 0 };
@@ -111,18 +138,25 @@ export default function AttendanceHistoryScreen({ navigation }) {
   };
 
   const filterRecords = () => {
+    // Safety check
+    if (!Array.isArray(attendanceRecords)) {
+      setFilteredRecords([]);
+      return;
+    }
+
     let filtered = [...attendanceRecords];
 
     // Filter by status
     if (statusFilter !== 'all') {
-      filtered = filtered.filter((record) => record.status === statusFilter);
+      filtered = filtered.filter((record) => record && record.status === statusFilter);
     }
 
     // Filter by search query (student name)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter((record) => {
-        const studentName = `${record.student?.firstName} ${record.student?.lastName}`.toLowerCase();
+        if (!record || !record.student) return false;
+        const studentName = `${record.student?.firstName || ''} ${record.student?.lastName || ''}`.toLowerCase();
         return studentName.includes(query);
       });
     }
@@ -130,6 +164,8 @@ export default function AttendanceHistoryScreen({ navigation }) {
     // Group by date
     const groupedByDate = {};
     filtered.forEach((record) => {
+      if (!record || !record.date) return; // Skip invalid records
+      
       const dateKey = record.date.split('T')[0];
       if (!groupedByDate[dateKey]) {
         groupedByDate[dateKey] = [];
