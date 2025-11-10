@@ -61,17 +61,32 @@ export default function CallLogScreen({ route, navigation }) {
         ? await callAPI.getByStudent(studentId, { limit: 50 })
         : await callAPI.getAll({ limit: 50 });
       
-      const logs = logsResponse.data?.data?.callLogs || [];
+      console.log('Call logs response:', logsResponse.data);
+      
+      // Handle multiple response structures
+      const logs = logsResponse.data?.data?.callLogs || 
+                   logsResponse.data?.callLogs || 
+                   [];
+      
+      console.log('Extracted call logs:', logs);
       setCallLogs(logs);
       
       // Load stats
-      const statsResponse = await callAPI.getStats(studentId ? { studentId } : {});
-      const statsData = statsResponse.data?.data || {};
-      setStats(statsData);
+      try {
+        const statsResponse = await callAPI.getStats(studentId ? { studentId } : {});
+        console.log('Stats response:', statsResponse.data);
+        const statsData = statsResponse.data?.data || statsResponse.data || {};
+        setStats(statsData);
+      } catch (statsError) {
+        console.log('Could not load stats:', statsError.message);
+        // Stats are optional, continue without them
+      }
       
     } catch (error) {
       console.error('Error loading call logs:', error);
-      showSnackbar('Failed to load call logs');
+      console.error('Error details:', error.response?.data);
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to load call logs';
+      showSnackbar(errorMsg);
     } finally {
       setLoading(false);
       setRefreshing(false);

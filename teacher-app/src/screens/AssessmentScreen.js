@@ -64,11 +64,15 @@ export default function AssessmentScreen({ route, navigation }) {
     try {
       setLoading(true);
       const response = await assessmentAPI.getByStudent(studentId);
+      console.log('Assessments response:', response.data);
       const data = response.data?.data?.assessments || response.data?.assessments || [];
+      console.log('Extracted assessments:', data);
       setAssessments(data);
     } catch (error) {
       console.error('Error loading assessments:', error);
-      showSnackbar('Failed to load assessments');
+      console.error('Error details:', error.response?.data);
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to load assessments';
+      showSnackbar(errorMsg);
     } finally {
       setLoading(false);
       setRefreshing(false);
