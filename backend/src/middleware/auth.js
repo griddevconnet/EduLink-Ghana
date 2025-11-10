@@ -45,9 +45,18 @@ const authenticate = async (req, res, next) => {
     // Convert Mongoose document to plain object to avoid issues
     const userObj = user.toObject();
     
+    // Debug: Log JWT decoded data
+    logger.info('JWT decoded data:', {
+      userId: decoded.userId,
+      role: decoded.role,
+      school: decoded.school,
+      phone: decoded.phone
+    });
+    
     // Override with JWT data if present (JWT is source of truth)
     if (decoded.role) {
       userObj.role = decoded.role;
+      logger.info('Set user role from JWT:', decoded.role);
     }
     if (decoded.school) {
       userObj.school = decoded.school;
@@ -55,6 +64,13 @@ const authenticate = async (req, res, next) => {
     if (decoded.userId) {
       userObj.userId = decoded.userId;
     }
+    
+    // Debug: Log final user object
+    logger.info('Final req.user object:', {
+      role: userObj.role,
+      _id: userObj._id,
+      userId: userObj.userId
+    });
     
     // Attach plain user object to request
     req.user = userObj;
@@ -95,10 +111,23 @@ const authorize = (...roles) => {
       });
     }
     
+    // Debug logging
+    logger.info('Authorization check:', {
+      userRole: req.user.role,
+      requiredRoles: roles,
+      userId: req.user._id || req.user.userId,
+      hasRole: roles.includes(req.user.role)
+    });
+    
     if (!roles.includes(req.user.role)) {
+      logger.warn('Authorization failed:', {
+        userRole: req.user.role,
+        requiredRoles: roles,
+        userObject: JSON.stringify(req.user)
+      });
       return res.status(403).json({
         success: false,
-        error: `Access denied. Required role: ${roles.join(' or ')}`,
+        error: `Access denied. Required role: ${roles.join(',')}`,
       });
     }
     
