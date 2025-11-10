@@ -114,7 +114,9 @@ export default function StudentDetailScreen({ route, navigation }) {
             text: 'Log Call', 
             onPress: () => navigation.navigate('CallLog', { 
               studentId: student._id, 
-              studentName: `${student.firstName} ${student.lastName}` 
+              studentName: `${student.firstName} ${student.lastName}`,
+              prefilledPhone: primaryContact.phone,
+              prefilledContactName: primaryContact.name || 'Parent'
             })
           },
         ]

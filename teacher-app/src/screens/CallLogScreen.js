@@ -25,7 +25,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { callAPI } from '../services/api';
 
 export default function CallLogScreen({ route, navigation }) {
-  const { studentId, studentName } = route.params || {};
+  const { studentId, studentName, prefilledPhone, prefilledContactName } = route.params || {};
   
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -51,6 +51,16 @@ export default function CallLogScreen({ route, navigation }) {
   useEffect(() => {
     loadCallLogs();
   }, [studentId]);
+  
+  // Prefill phone and contact name if provided
+  useEffect(() => {
+    if (prefilledPhone || prefilledContactName) {
+      setPhone(prefilledPhone || '');
+      setContactName(prefilledContactName || '');
+      // Auto-open dialog if prefilled data exists
+      setDialogVisible(true);
+    }
+  }, [prefilledPhone, prefilledContactName]);
 
   const loadCallLogs = async () => {
     try {
