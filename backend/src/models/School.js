@@ -135,7 +135,10 @@ schoolSchema.index({ active: 1 });
 
 // Virtual for full address
 schoolSchema.virtual('fullAddress').get(function () {
-  return `${this.address || ''}, ${this.district}, ${this.region}`.trim();
+  const parts = [this.address, this.district, this.region].filter(
+    (p) => p && String(p).trim().length > 0
+  );
+  return parts.join(', ');
 });
 
 // Instance method to check if school has GPS coordinates
