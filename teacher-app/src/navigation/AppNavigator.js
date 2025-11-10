@@ -14,6 +14,7 @@ import StudentsScreen from '../screens/students/StudentsScreen';
 import StudentDetailScreen from '../screens/students/StudentDetailScreen';
 import AddStudentScreen from '../screens/students/AddStudentScreen';
 import AttendanceScreen from '../screens/attendance/AttendanceScreen';
+import AttendanceHistoryScreen from '../screens/attendance/AttendanceHistoryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
 const Stack = createStackNavigator();
@@ -114,7 +115,7 @@ function MainNavigator() {
       />
       <Tab.Screen 
         name="Attendance" 
-        component={AttendanceScreen}
+        component={AttendanceNavigator}
         options={{ 
           title: 'Mark Attendance',
           tabBarLabel: 'Attendance',
@@ -131,6 +132,30 @@ function MainNavigator() {
         }}
       />
     </Tab.Navigator>
+  );
+}
+
+// Attendance Stack Navigator
+function AttendanceNavigator() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: '#1CABE2' },
+        headerTintColor: '#fff',
+        headerTitleStyle: { fontWeight: 'bold' },
+      }}
+    >
+      <Stack.Screen 
+        name="MarkAttendance" 
+        component={AttendanceScreen}
+        options={{ title: 'Mark Attendance', headerShown: false }}
+      />
+      <Stack.Screen 
+        name="AttendanceHistory" 
+        component={AttendanceHistoryScreen}
+        options={{ title: 'Attendance History', headerShown: false }}
+      />
+    </Stack.Navigator>
   );
 }
 

@@ -460,15 +460,26 @@ export default function AttendanceScreen({ navigation }) {
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Attendance</Text>
-          <Text style={styles.headerDate}>
-            {new Date(selectedDate).toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
-          </Text>
+          <View style={styles.headerTop}>
+            <View style={styles.headerLeft}>
+              <Text style={styles.headerTitle}>Attendance</Text>
+              <Text style={styles.headerDate}>
+                {new Date(selectedDate).toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </Text>
+            </View>
+            <IconButton
+              icon="history"
+              size={24}
+              iconColor="#FFFFFF"
+              onPress={() => navigation.navigate('AttendanceHistory')}
+              style={styles.historyButton}
+            />
+          </View>
         </View>
       </LinearGradient>
 
@@ -630,7 +641,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   headerContent: {
+    width: '100%',
+  },
+  headerTop: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerLeft: {
+    flex: 1,
   },
   headerTitle: {
     fontSize: 24,
@@ -642,6 +661,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFFFFF',
     opacity: 0.9,
+  },
+  historyButton: {
+    margin: 0,
   },
   dateControls: {
     flexDirection: 'row',
