@@ -18,7 +18,7 @@ router.use(authenticate);
  */
 router.get(
   '/at-risk',
-  authorize(['teacher', 'headteacher', 'admin', 'district_officer']),
+  authorize('teacher', 'headteacher', 'admin', 'district_officer'),
   getAtRiskStudents
 );
 
@@ -29,7 +29,7 @@ router.get(
  */
 router.post(
   '/calculate/:studentId',
-  authorize(['teacher', 'headteacher', 'admin']),
+  authorize('teacher', 'headteacher', 'admin'),
   calculateRiskScore
 );
 
@@ -40,7 +40,7 @@ router.post(
  */
 router.get(
   '/student/:studentId',
-  authorize(['teacher', 'headteacher', 'admin', 'district_officer']),
+  authorize('teacher', 'headteacher', 'admin', 'district_officer'),
   getRiskScore
 );
 
@@ -51,7 +51,7 @@ router.get(
  */
 router.post(
   '/bulk-calculate',
-  authorize(['headteacher', 'admin']),
+  authorize('headteacher', 'admin'),
   bulkCalculateRiskScores
 );
 

@@ -30,7 +30,7 @@ router.use(authenticate);
  */
 router.post(
   '/',
-  authorize(['teacher', 'headteacher', 'admin']),
+  authorize('teacher', 'headteacher', 'admin'),
   [
     body('studentId').isMongoId().withMessage('Invalid student ID'),
     body('attendanceId').optional().isMongoId().withMessage('Invalid attendance ID'),
@@ -57,7 +57,7 @@ router.post(
  */
 router.get(
   '/student/:studentId',
-  authorize(['teacher', 'headteacher', 'admin', 'district_officer']),
+  authorize('teacher', 'headteacher', 'admin', 'district_officer'),
   [
     param('studentId').isMongoId().withMessage('Invalid student ID'),
     query('page').optional().isInt({ min: 1 }),
@@ -74,7 +74,7 @@ router.get(
  */
 router.get(
   '/stats',
-  authorize(['teacher', 'headteacher', 'admin', 'district_officer']),
+  authorize('teacher', 'headteacher', 'admin', 'district_officer'),
   [
     query('studentId').optional().isMongoId(),
     query('startDate').optional().isISO8601(),
@@ -91,7 +91,7 @@ router.get(
  */
 router.get(
   '/',
-  authorize(['teacher', 'headteacher', 'admin', 'district_officer']),
+  authorize('teacher', 'headteacher', 'admin', 'district_officer'),
   [
     query('student').optional().isMongoId(),
     query('result').optional().isIn(['answered', 'no_answer', 'busy', 'failed', 'rejected', 'voicemail']),
@@ -112,7 +112,7 @@ router.get(
  */
 router.put(
   '/:id',
-  authorize(['teacher', 'headteacher', 'admin']),
+  authorize('teacher', 'headteacher', 'admin'),
   [
     param('id').isMongoId().withMessage('Invalid call log ID'),
     body('result')
@@ -135,7 +135,7 @@ router.put(
  */
 router.delete(
   '/:id',
-  authorize(['teacher', 'headteacher', 'admin']),
+  authorize('teacher', 'headteacher', 'admin'),
   [
     param('id').isMongoId().withMessage('Invalid call log ID'),
     validate,
