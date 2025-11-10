@@ -110,7 +110,13 @@ export default function StudentDetailScreen({ route, navigation }) {
         `Call ${primaryContact.name || 'Parent'} at ${primaryContact.phone}?`,
         [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Call', onPress: () => console.log('Calling parent...') },
+          { 
+            text: 'Log Call', 
+            onPress: () => navigation.navigate('CallLog', { 
+              studentId: student._id, 
+              studentName: `${student.firstName} ${student.lastName}` 
+            })
+          },
         ]
       );
     } else {
@@ -294,6 +300,51 @@ export default function StudentDetailScreen({ route, navigation }) {
                 <Text style={styles.infoLabel}>Location Type</Text>
                 <Text style={styles.infoValue}>{student.locationType || 'Not specified'}</Text>
               </View>
+            </View>
+          </Card.Content>
+        </Card>
+
+        {/* Quick Actions Card */}
+        <Card style={styles.card}>
+          <Card.Content>
+            <View style={styles.sectionHeader}>
+              <MaterialCommunityIcons name="lightning-bolt" size={24} color="#1CABE2" />
+              <Text style={styles.sectionTitle}>Quick Actions</Text>
+            </View>
+            <Divider style={styles.divider} />
+            
+            <View style={styles.actionButtons}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => navigation.navigate('Assessment', { 
+                  studentId: student._id, 
+                  studentName: `${student.firstName} ${student.lastName}` 
+                })}
+              >
+                <LinearGradient
+                  colors={['#4CAF50', '#45A049']}
+                  style={styles.actionButtonGradient}
+                >
+                  <MaterialCommunityIcons name="clipboard-text" size={24} color="#FFFFFF" />
+                  <Text style={styles.actionButtonText}>Assessments</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => navigation.navigate('CallLog', { 
+                  studentId: student._id, 
+                  studentName: `${student.firstName} ${student.lastName}` 
+                })}
+              >
+                <LinearGradient
+                  colors={['#2196F3', '#1976D2']}
+                  style={styles.actionButtonGradient}
+                >
+                  <MaterialCommunityIcons name="phone-log" size={24} color="#FFFFFF" />
+                  <Text style={styles.actionButtonText}>Call Logs</Text>
+                </LinearGradient>
+              </TouchableOpacity>
             </View>
           </Card.Content>
         </Card>
@@ -519,6 +570,29 @@ const styles = StyleSheet.create({
   },
   divider: {
     marginBottom: 15,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  actionButton: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 3,
+  },
+  actionButtonGradient: {
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 6,
   },
   infoGrid: {
     flexDirection: 'row',
