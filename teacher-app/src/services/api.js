@@ -188,6 +188,27 @@ export const riskAPI = {
     api.post('/api/risk/bulk-calculate', { schoolId }),
 };
 
+// Call Log APIs
+export const callAPI = {
+  create: (callData) =>
+    api.post('/api/calls', callData),
+  
+  getByStudent: (studentId, params) =>
+    api.get(`/api/calls/student/${studentId}`, { params }),
+  
+  getAll: (params) =>
+    api.get('/api/calls', { params }),
+  
+  getStats: (params) =>
+    api.get('/api/calls/stats', { params }),
+  
+  update: (callId, data) =>
+    api.put(`/api/calls/${callId}`, data),
+  
+  delete: (callId) =>
+    api.delete(`/api/calls/${callId}`),
+};
+
 // AI APIs
 const aiAPI = axios.create({
   baseURL: AI_URL,

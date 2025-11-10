@@ -16,6 +16,7 @@ import AddStudentScreen from '../screens/students/AddStudentScreen';
 import AttendanceScreen from '../screens/attendance/AttendanceScreen';
 import AttendanceHistoryScreen from '../screens/attendance/AttendanceHistoryScreen';
 import FollowUpScreen from '../screens/FollowUpScreen';
+import CallLogScreen from '../screens/CallLogScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
 const Stack = createStackNavigator();
@@ -156,6 +157,11 @@ function HomeNavigator() {
         component={FollowUpScreen}
         options={{ title: 'Follow-Up Queue', headerShown: false }}
       />
+      <Stack.Screen 
+        name="CallLog" 
+        component={CallLogScreen}
+        options={{ title: 'Call Logs', headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }
@@ -208,6 +214,11 @@ function StudentsNavigator() {
         name="AddStudent" 
         component={AddStudentScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="CallLog" 
+        component={CallLogScreen}
+        options={{ title: 'Call Logs', headerShown: false }}
       />
     </Stack.Navigator>
   );

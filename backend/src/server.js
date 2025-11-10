@@ -65,8 +65,8 @@ const studentRoutes = require('./routes/students');
 const attendanceRoutes = require('./routes/attendance');
 const assessmentRoutes = require('./routes/assessments');
 const riskRoutes = require('./routes/risk');
+const callRoutes = require('./routes/calls');
 const ivrRoutes = require('./routes/ivr');
-// const callRoutes = require('./routes/calls');
 // const analyticsRoutes = require('./routes/analytics');
 
 // Use route modules
@@ -76,8 +76,8 @@ app.use('/api/students', studentRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/assessments', assessmentRoutes);
 app.use('/api/risk', riskRoutes);
+app.use('/api/calls', callRoutes);
 app.use('/api/ivr', ivrRoutes);
-// app.use('/api/calls', callRoutes);
 // app.use('/api/analytics', analyticsRoutes);
 
 // Import error handlers
