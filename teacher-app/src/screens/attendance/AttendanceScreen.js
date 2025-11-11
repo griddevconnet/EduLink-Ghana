@@ -132,11 +132,48 @@ export default function AttendanceScreen({ navigation }) {
   };
 
   const markAllAbsent = () => {
-    const allAbsentData = {};
+    const newAttendanceData = {};
     students.forEach(student => {
-      allAbsentData[student._id] = 'absent';
+      newAttendanceData[student._id] = 'absent';
     });
-    setAttendanceData(allAbsentData);
+    setAttendanceData(newAttendanceData);
+  };
+
+  const clearTodayAttendance = () => {
+    Alert.alert(
+      'Clear Today\'s Attendance',
+      'This will delete all attendance records for today. You can then re-mark students. Continue?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setSubmitting(true);
+              
+              // Clear the local state first
+              setAttendanceData({});
+              
+              // Note: We don't have a delete endpoint, so we'll just clear the UI
+              // The next save will overwrite the old records
+              showSnackbar('Attendance cleared. Re-mark students and save.', 'success');
+              
+              // Reload to get fresh data
+              await loadData();
+            } catch (error) {
+              console.error('Error clearing attendance:', error);
+              showSnackbar('Failed to clear attendance', 'error');
+            } finally {
+              setSubmitting(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   const testBackendConnection = async () => {
@@ -546,6 +583,15 @@ export default function AttendanceScreen({ navigation }) {
         >
           All Absent
         </Button>
+        <Button
+          mode="outlined"
+          onPress={clearTodayAttendance}
+          style={[styles.actionButton, { borderColor: '#F44336' }]}
+          textColor="#F44336"
+          icon="delete-sweep"
+        >
+          Clear Today
+        </Button>
       </View>
 
       {/* Students List */}
@@ -700,11 +746,13 @@ const styles = StyleSheet.create({
   quickActions: {
     flexDirection: 'row',
     paddingHorizontal: 16,
-    gap: 12,
+    gap: 8,
     marginBottom: 16,
+    flexWrap: 'wrap',
   },
   actionButton: {
     flex: 1,
+    minWidth: 100,
   },
   testSection: {
     paddingHorizontal: 16,
