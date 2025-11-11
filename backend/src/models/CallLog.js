@@ -60,7 +60,7 @@ const callLogSchema = new mongoose.Schema(
     result: {
       type: String,
       required: [true, 'Call result is required'],
-      enum: ['answered', 'no_answer', 'busy', 'failed', 'rejected', 'voicemail'],
+      enum: ['pending', 'answered', 'no_answer', 'busy', 'failed', 'rejected', 'voicemail'],
     },
     
     // Attempt tracking
