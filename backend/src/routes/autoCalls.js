@@ -13,11 +13,11 @@ router.use(authenticate);
 /**
  * @route   POST /api/auto-calls/process-followups
  * @desc    Manually trigger end-of-day follow-up processing
- * @access  Headteacher, Admin
+ * @access  Teacher, Headteacher, Admin
  */
 router.post(
   '/process-followups',
-  authorize('headteacher', 'admin'),
+  authorize('teacher', 'headteacher', 'admin'),
   triggerFollowUpProcessing
 );
 

@@ -48,9 +48,42 @@ const triggerRetryProcessing = async (req, res, next) => {
  */
 const getStats = async (req, res, next) => {
   try {
+    const { Attendance } = require('../models');
+    
+    // Get aggregate stats
     const stats = await getFollowUpStats();
     
-    success(res, stats);
+    // Get list of students needing follow-up
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const students = await Attendance.find({
+      date: today,
+      status: 'absent',
+      followUpRequired: true,
+      followUpCompleted: false,
+      callTriggered: false,
+    })
+      .populate('student', 'firstName lastName')
+      .populate('school', 'name')
+      .lean();
+    
+    // Format student data
+    const studentList = students.map(record => ({
+      attendanceId: record._id,
+      studentId: record.student?._id,
+      studentName: `${record.student?.firstName} ${record.student?.lastName}`,
+      schoolName: record.school?.name,
+      absentDate: record.date,
+      followUpRequired: record.followUpRequired,
+      callTriggered: record.callTriggered,
+    }));
+    
+    success(res, {
+      ...stats,
+      pendingFollowUps: studentList.length,
+      students: studentList,
+    });
   } catch (error) {
     next(error);
   }
