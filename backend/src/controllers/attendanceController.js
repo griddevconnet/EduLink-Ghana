@@ -395,6 +395,43 @@ const updateAttendance = async (req, res, next) => {
   }
 };
 
+/**
+ * Delete attendance record
+ * DELETE /api/attendance/:id
+ * @access Teacher, Headteacher
+ */
+const deleteAttendance = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    // Find attendance record
+    const attendance = await Attendance.findById(id);
+    
+    if (!attendance) {
+      return notFound(res, 'Attendance record not found');
+    }
+    
+    // Check school access for teachers/headteachers
+    if (['teacher', 'headteacher'].includes(req.user.role)) {
+      const userSchoolId = req.user.school?._id || req.user.school;
+      const attendanceSchoolId = attendance.school?._id || attendance.school;
+      
+      if (!userSchoolId || userSchoolId.toString() !== attendanceSchoolId.toString()) {
+        return forbidden(res, 'You can only delete attendance records for your school');
+      }
+    }
+    
+    // Delete the attendance record
+    await Attendance.findByIdAndDelete(id);
+    
+    logger.info(`Attendance deleted: ${id} by ${req.user.phone}`);
+    
+    success(res, { deletedId: id }, 'Attendance record deleted successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   markAttendance,
   bulkMarkAttendance,
@@ -405,4 +442,5 @@ module.exports = {
   completeFollowUp,
   getAbsenceStats,
   updateAttendance,
+  deleteAttendance,
 };

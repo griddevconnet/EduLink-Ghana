@@ -200,4 +200,15 @@ router.put(
   attendanceController.updateAttendance
 );
 
+/**
+ * @route   DELETE /api/attendance/:id
+ * @desc    Delete attendance record
+ * @access  Teacher, Headteacher
+ */
+router.delete(
+  '/:id',
+  requirePermission('teacher'),
+  attendanceController.deleteAttendance
+);
+
 module.exports = router;
