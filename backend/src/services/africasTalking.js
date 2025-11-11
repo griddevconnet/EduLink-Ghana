@@ -32,8 +32,8 @@ const makeCall = async (to, callerId = null) => {
     logger.info(`Making call to ${to} from ${from}`);
     
     const options = {
-      to: [to],
-      from: from,
+      callTo: to,
+      callFrom: from,
     };
     
     const result = await voice.call(options);
