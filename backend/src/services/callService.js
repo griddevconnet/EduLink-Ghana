@@ -1,4 +1,4 @@
-const { makeCall, generateIVRMenu, generateIVRRecord, generateIVRHangup, parseDTMFInput } = require('./africasTalking');
+const { makeCall, sendSMS, generateIVRMenu, generateIVRRecord, generateIVRHangup, parseDTMFInput } = require('./africasTalking');
 const { CallLog, Student, Attendance } = require('../models');
 const logger = require('../utils/logger');
 
@@ -16,6 +16,9 @@ const logger = require('../utils/logger');
  */
 const initiateAbsenceCall = async (student, attendance, contact) => {
   try {
+    // Check if we should use SMS instead of voice (for testing)
+    const useSMS = process.env.USE_SMS_FOR_TESTING === 'true';
+    
     // Create call log
     const callLog = await CallLog.create({
       student: student._id,
@@ -30,8 +33,28 @@ const initiateAbsenceCall = async (student, attendance, contact) => {
       languageDetectionMethod: 'user_preference',
     });
     
-    // Make call
-    const callResult = await makeCall(contact.phone);
+    let callResult;
+    
+    if (useSMS) {
+      // Send SMS notification instead of voice call
+      const message = `Hello from ${attendance.school?.name || 'school'}. ${student.firstName} ${student.lastName} was absent from school today. Please reply with reason: 1=Sick, 2=Travel, 3=Work, 4=Family, 5=Other`;
+      
+      logger.info(`Sending SMS to ${contact.phone} instead of voice call (TEST MODE)`);
+      callResult = await sendSMS(contact.phone, message);
+      
+      // Map SMS result to call result format
+      if (callResult.success) {
+        callResult.data = {
+          entries: [{
+            sessionId: callResult.data.SMSMessageData?.Recipients?.[0]?.messageId || 'SMS-' + Date.now(),
+            status: 'Queued'
+          }]
+        };
+      }
+    } else {
+      // Make voice call
+      callResult = await makeCall(contact.phone);
+    }
     
     if (callResult.success) {
       callLog.providerCallId = callResult.data.entries?.[0]?.sessionId;

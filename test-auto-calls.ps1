@@ -55,9 +55,30 @@ try {
     Write-Host ""
 }
 
-# Step 3: Ask user if they want to proceed
-Write-Host "Step 3: Trigger automated calls?" -ForegroundColor Yellow
-Write-Host "        This will call parents of absent students NOW" -ForegroundColor White
+# Step 3: Ask user to choose SMS or Voice
+Write-Host "Step 3: Choose notification method" -ForegroundColor Yellow
+Write-Host "        1 = Voice Call (requires production account)" -ForegroundColor White
+Write-Host "        2 = SMS (works with sandbox)" -ForegroundColor White
+Write-Host ""
+$method = Read-Host "        Choose method (1 or 2)"
+
+$useSMS = $false
+if ($method -eq "2") {
+    $useSMS = $true
+    Write-Host ""
+    Write-Host "[INFO] Using SMS mode for testing" -ForegroundColor Cyan
+} else {
+    Write-Host ""
+    Write-Host "[INFO] Using Voice Call mode" -ForegroundColor Cyan
+}
+
+Write-Host ""
+Write-Host "Step 4: Trigger automated notifications?" -ForegroundColor Yellow
+if ($useSMS) {
+    Write-Host "        This will send SMS to parents of absent students NOW" -ForegroundColor White
+} else {
+    Write-Host "        This will call parents of absent students NOW" -ForegroundColor White
+}
 Write-Host ""
 $confirm = Read-Host "        Continue? (y/n)"
 
@@ -70,7 +91,12 @@ if ($confirm -ne "y") {
 Write-Host ""
 Write-Host "Triggering follow-up processing..." -ForegroundColor Yellow
 try {
-    $result = Invoke-RestMethod -Uri "$baseUrl/api/auto-calls/process-followups" -Method POST -Headers $headers
+    # Set environment variable for backend
+    $body = @{
+        useSMS = $useSMS
+    } | ConvertTo-Json
+    
+    $result = Invoke-RestMethod -Uri "$baseUrl/api/auto-calls/process-followups" -Method POST -Headers $headers -Body $body
     Write-Host "[OK] Processing completed successfully" -ForegroundColor Green
     Write-Host ""
     Write-Host "     Results:" -ForegroundColor Cyan

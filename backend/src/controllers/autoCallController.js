@@ -14,9 +14,19 @@ const logger = require('../utils/logger');
  */
 const triggerFollowUpProcessing = async (req, res, next) => {
   try {
+    const useSMS = req.body?.useSMS || false;
+    
     logger.info('Manual trigger of follow-up processing by:', req.user.phone || req.user.email);
+    logger.info('Using SMS mode:', useSMS);
+    
+    // Temporarily set environment variable for this request
+    const originalValue = process.env.USE_SMS_FOR_TESTING;
+    process.env.USE_SMS_FOR_TESTING = useSMS ? 'true' : 'false';
     
     const results = await processEndOfDayFollowUps();
+    
+    // Restore original value
+    process.env.USE_SMS_FOR_TESTING = originalValue;
     
     // Format response for consistency
     const response = {
