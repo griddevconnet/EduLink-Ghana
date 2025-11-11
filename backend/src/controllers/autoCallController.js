@@ -74,20 +74,25 @@ const getStats = async (req, res, next) => {
       followUpCompleted: false,
       callTriggered: false,
     })
-      .populate('student', 'firstName lastName')
+      .populate('student', 'firstName lastName parentContacts')
       .populate('school', 'name')
       .lean();
     
     // Format student data
-    const studentList = students.map(record => ({
-      attendanceId: record._id,
-      studentId: record.student?._id,
-      studentName: `${record.student?.firstName} ${record.student?.lastName}`,
-      schoolName: record.school?.name,
-      absentDate: record.date,
-      followUpRequired: record.followUpRequired,
-      callTriggered: record.callTriggered,
-    }));
+    const studentList = students.map(record => {
+      const primaryContact = record.student?.parentContacts?.[0];
+      return {
+        attendanceId: record._id,
+        studentId: record.student?._id,
+        studentName: `${record.student?.firstName} ${record.student?.lastName}`,
+        schoolName: record.school?.name,
+        parentPhone: primaryContact?.phone || 'No phone',
+        parentName: primaryContact?.name || 'No contact',
+        absentDate: record.date,
+        followUpRequired: record.followUpRequired,
+        callTriggered: record.callTriggered,
+      };
+    });
     
     success(res, {
       ...stats,
