@@ -67,7 +67,8 @@ const attendanceSchema = new mongoose.Schema(
     followUpRequired: {
       type: Boolean,
       default: function () {
-        return this.status === 'absent' && this.reason === 'unknown';
+        // All absences require follow-up by default
+        return this.status === 'absent';
       },
     },
     
@@ -207,9 +208,13 @@ attendanceSchema.pre('save', function (next) {
     this.date = date;
   }
   
-  // Set followUpRequired based on status and reason
+  // Set followUpRequired based on status
+  // All absences require follow-up unless explicitly marked as not needed
   if (this.isModified('status') || this.isModified('reason')) {
-    this.followUpRequired = this.status === 'absent' && this.reason === 'unknown';
+    // Require follow-up for all absences, except excused absences with a valid reason
+    this.followUpRequired = this.status === 'absent' && 
+                            this.status !== 'excused' &&
+                            !this.followUpCompleted;
   }
   
   next();

@@ -67,6 +67,7 @@ const assessmentRoutes = require('./routes/assessments');
 const riskRoutes = require('./routes/risk');
 const callRoutes = require('./routes/calls');
 const ivrRoutes = require('./routes/ivr');
+const autoCallRoutes = require('./routes/autoCalls');
 // const analyticsRoutes = require('./routes/analytics');
 
 // Use route modules
@@ -78,6 +79,7 @@ app.use('/api/assessments', assessmentRoutes);
 app.use('/api/risk', riskRoutes);
 app.use('/api/calls', callRoutes);
 app.use('/api/ivr', ivrRoutes);
+app.use('/api/auto-calls', autoCallRoutes);
 // app.use('/api/analytics', analyticsRoutes);
 
 // Import error handlers
@@ -107,6 +109,15 @@ const startServer = async () => {
       }
     } else {
       logger.info('📞 Call queue disabled (no Redis configuration)');
+    }
+    
+    // Initialize cron jobs for automated calls
+    try {
+      const { initializeCronJobs } = require('./services/cronScheduler');
+      initializeCronJobs();
+      logger.info('⏰ Automated call scheduler initialized');
+    } catch (error) {
+      logger.warn('Cron scheduler not initialized:', error.message);
     }
     
     // Start Express server
