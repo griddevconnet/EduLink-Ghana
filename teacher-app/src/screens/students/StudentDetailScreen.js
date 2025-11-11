@@ -96,7 +96,12 @@ export default function StudentDetailScreen({ route, navigation }) {
   };
 
   const handleEditStudent = () => {
-    navigation.navigate('EditStudent', { studentId, student });
+    // TODO: Implement edit student screen
+    Alert.alert(
+      'Edit Student',
+      'Student editing feature coming soon!',
+      [{ text: 'OK' }]
+    );
   };
 
   const handleMarkAttendance = () => {
