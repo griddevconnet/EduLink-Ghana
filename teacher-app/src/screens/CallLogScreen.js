@@ -52,12 +52,12 @@ export default function CallLogScreen({ route, navigation }) {
     loadCallLogs();
   }, [studentId]);
   
-  // Prefill phone and contact name if provided
+  // Prefill phone and contact name if provided and auto-open dialog
   useEffect(() => {
     if (prefilledPhone || prefilledContactName) {
       setPhone(prefilledPhone || '');
       setContactName(prefilledContactName || '');
-      // Auto-open dialog if prefilled data exists
+      // Auto-open dialog when coming from a call
       setDialogVisible(true);
     }
   }, [prefilledPhone, prefilledContactName]);

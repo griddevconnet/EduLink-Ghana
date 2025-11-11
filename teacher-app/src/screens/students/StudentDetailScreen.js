@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   Dimensions,
+  Linking,
 } from 'react-native';
 import {
   Text,
@@ -102,7 +103,7 @@ export default function StudentDetailScreen({ route, navigation }) {
     navigation.navigate('MarkAttendance', { studentId, student });
   };
 
-  const handleContactParent = () => {
+  const handleContactParent = async () => {
     const primaryContact = student?.parentContacts?.[0];
     if (primaryContact?.phone) {
       Alert.alert(
@@ -111,13 +112,43 @@ export default function StudentDetailScreen({ route, navigation }) {
         [
           { text: 'Cancel', style: 'cancel' },
           { 
-            text: 'Log Call', 
-            onPress: () => navigation.navigate('CallLog', { 
-              studentId: student._id, 
-              studentName: `${student.firstName} ${student.lastName}`,
-              prefilledPhone: primaryContact.phone,
-              prefilledContactName: primaryContact.name || 'Parent'
-            })
+            text: 'Call Now', 
+            onPress: async () => {
+              try {
+                // Make the actual phone call
+                const phoneUrl = `tel:${primaryContact.phone}`;
+                const canOpen = await Linking.canOpenURL(phoneUrl);
+                
+                if (canOpen) {
+                  await Linking.openURL(phoneUrl);
+                  
+                  // After initiating the call, ask if they want to log it
+                  setTimeout(() => {
+                    Alert.alert(
+                      'Log This Call?',
+                      'Would you like to log this call for record keeping?',
+                      [
+                        { text: 'Not Now', style: 'cancel' },
+                        {
+                          text: 'Log Call',
+                          onPress: () => navigation.navigate('CallLog', {
+                            studentId: student._id,
+                            studentName: `${student.firstName} ${student.lastName}`,
+                            prefilledPhone: primaryContact.phone,
+                            prefilledContactName: primaryContact.name || 'Parent'
+                          })
+                        }
+                      ]
+                    );
+                  }, 1000); // Wait 1 second after call is initiated
+                } else {
+                  Alert.alert('Error', 'Unable to make phone calls on this device');
+                }
+              } catch (error) {
+                console.error('Error making call:', error);
+                Alert.alert('Error', 'Failed to initiate call');
+              }
+            }
           },
         ]
       );
