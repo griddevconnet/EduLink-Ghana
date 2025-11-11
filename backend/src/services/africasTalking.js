@@ -38,16 +38,22 @@ const makeCall = async (to, callerId = null) => {
     
     const result = await voice.call(options);
     
-    logger.info(`Call initiated to ${to}:`, result);
+    // Log only the important parts to avoid circular structure error
+    logger.info(`Call initiated to ${to}:`, {
+      status: result.status,
+      errorMessage: result.errorMessage,
+      entries: result.entries
+    });
+    
     return {
       success: true,
       data: result,
     };
   } catch (error) {
-    logger.error(`Failed to make call to ${to}:`, error);
+    logger.error(`Failed to make call to ${to}:`, error.message || error);
     return {
       success: false,
-      error: error.message,
+      error: error.message || 'Call failed',
     };
   }
 };
