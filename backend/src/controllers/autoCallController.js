@@ -10,15 +10,25 @@ const logger = require('../utils/logger');
 /**
  * Manually trigger end-of-day follow-up processing
  * POST /api/auto-calls/process-followups
- * @access Admin, Headteacher
+ * @access Teacher, Headteacher, Admin
  */
 const triggerFollowUpProcessing = async (req, res, next) => {
   try {
-    logger.info('Manual trigger of follow-up processing by:', req.user.email);
+    logger.info('Manual trigger of follow-up processing by:', req.user.phone || req.user.email);
     
     const results = await processEndOfDayFollowUps();
     
-    success(res, results, 'Follow-up processing completed');
+    // Format response for consistency
+    const response = {
+      totalProcessed: results.total || 0,
+      successfulCalls: results.successful || 0,
+      failedCalls: results.failed || 0,
+      skipped: results.skipped || 0,
+      details: results.details || [],
+      errors: results.errors || [],
+    };
+    
+    success(res, response, 'Follow-up processing completed');
   } catch (error) {
     next(error);
   }

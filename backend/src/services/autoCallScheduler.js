@@ -37,6 +37,7 @@ const processEndOfDayFollowUps = async () => {
       failed: 0,
       skipped: 0,
       errors: [],
+      details: [],
     };
     
     for (const attendance of pendingFollowUps) {
@@ -83,11 +84,25 @@ const processEndOfDayFollowUps = async () => {
           attendance.callTriggered = true;
           await attendance.save();
           
+          results.details.push({
+            student: `${student.firstName} ${student.lastName}`,
+            phone: primaryContact.phone,
+            status: 'success',
+            callId: callResult.callId,
+          });
+          
           logger.info(`✅ Call initiated successfully for ${student.firstName}`);
         } else {
           results.failed++;
           results.errors.push({
             student: `${student.firstName} ${student.lastName}`,
+            error: callResult.error,
+          });
+          
+          results.details.push({
+            student: `${student.firstName} ${student.lastName}`,
+            phone: primaryContact.phone,
+            status: 'failed',
             error: callResult.error,
           });
           
