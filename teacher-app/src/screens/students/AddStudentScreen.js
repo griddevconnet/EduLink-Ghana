@@ -16,34 +16,42 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { studentAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
-export default function AddStudentScreen({ navigation }) {
+export default function AddStudentScreen({ navigation, route }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  
+  // Check if we're editing an existing student
+  const editMode = route.params?.student ? true : false;
+  const existingStudent = route.params?.student;
   
   // Debug: Log user data to see what's available (only once)
   React.useEffect(() => {
     console.log('Current user data:', user);
+    console.log('Edit mode:', editMode);
+    console.log('Existing student:', existingStudent);
   }, []);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showYearPicker, setShowYearPicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(
+    existingStudent?.dateOfBirth ? new Date(existingStudent.dateOfBirth) : new Date()
+  );
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    otherNames: '',
-    dateOfBirth: '',
-    gender: '',
-    languageSpoken: '',
-    class: '',
-    schoolName: '',
-    district: '',
-    region: 'Greater Accra',
-    disabilityStatus: 'None',
-    enrollmentStatus: 'enrolled',
+    firstName: existingStudent?.firstName || '',
+    lastName: existingStudent?.lastName || '',
+    otherNames: existingStudent?.otherNames || '',
+    dateOfBirth: existingStudent?.dateOfBirth ? new Date(existingStudent.dateOfBirth).toISOString().split('T')[0] : '',
+    gender: existingStudent?.gender || '',
+    languageSpoken: existingStudent?.languageSpoken || '',
+    class: existingStudent?.class || '',
+    schoolName: existingStudent?.school?.name || '',
+    district: existingStudent?.school?.district || '',
+    region: existingStudent?.school?.region || 'Greater Accra',
+    disabilityStatus: existingStudent?.disabilityStatus || 'None',
+    enrollmentStatus: existingStudent?.enrollmentStatus || 'enrolled',
     // Parent Information
-    parentFirstName: '',
-    parentLastName: '',
-    parentContact: '',
+    parentFirstName: existingStudent?.parentContacts?.[0]?.name?.split(' ')[0] || '',
+    parentLastName: existingStudent?.parentContacts?.[0]?.name?.split(' ')[1] || '',
+    parentContact: existingStudent?.parentContacts?.[0]?.phone || '',
   });
 
   const genderOptions = ['Male', 'Female', 'Other'];
@@ -172,12 +180,21 @@ export default function AddStudentScreen({ navigation }) {
       }
 
       console.log('Submitting student data:', studentData);
-      const response = await studentAPI.create(studentData);
-      console.log('Student created successfully:', response.data);
+      
+      let response;
+      if (editMode) {
+        // Update existing student
+        response = await studentAPI.update(existingStudent._id, studentData);
+        console.log('Student updated successfully:', response.data);
+      } else {
+        // Create new student
+        response = await studentAPI.create(studentData);
+        console.log('Student created successfully:', response.data);
+      }
       
       Alert.alert(
         'Success!', 
-        'Student added successfully',
+        editMode ? 'Student updated successfully' : 'Student added successfully',
         [
           {
             text: 'OK',
@@ -285,7 +302,7 @@ export default function AddStudentScreen({ navigation }) {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <MaterialCommunityIcons name="arrow-left" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Add New Student</Text>
+          <Text style={styles.headerTitle}>{editMode ? 'Edit Student' : 'Add New Student'}</Text>
           <View style={styles.placeholder} />
         </View>
       </LinearGradient>
@@ -517,7 +534,7 @@ export default function AddStudentScreen({ navigation }) {
               contentStyle={styles.submitButtonContent}
               labelStyle={styles.submitButtonText}
             >
-              {loading ? 'Adding Student...' : 'Add Student'}
+              {loading ? (editMode ? 'Updating...' : 'Adding Student...') : (editMode ? 'Update Student' : 'Add Student')}
             </Button>
           </View>
         </Card>
