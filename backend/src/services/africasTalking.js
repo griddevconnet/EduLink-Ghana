@@ -27,9 +27,13 @@ const ussd = africasTalking.USSD;
  */
 const makeCall = async (to, callerId = null) => {
   try {
+    const from = callerId || process.env.AFRICASTALKING_CALLER_ID || '+254711082300';
+    
+    logger.info(`Making call to ${to} from ${from}`);
+    
     const options = {
       to: [to],
-      from: callerId || process.env.AFRICASTALKING_CALLER_ID,
+      from: from,
     };
     
     const result = await voice.call(options);
