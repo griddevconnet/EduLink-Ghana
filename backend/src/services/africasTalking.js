@@ -78,16 +78,21 @@ const sendSMS = async (to, message, from = null) => {
     
     const result = await sms.send(options);
     
-    logger.info(`SMS sent to ${to}:`, result);
+    // Log only the important parts to avoid circular structure error
+    logger.info(`SMS sent to ${to}:`, {
+      SMSMessageData: result.SMSMessageData,
+      status: result.status
+    });
+    
     return {
       success: true,
       data: result,
     };
   } catch (error) {
-    logger.error(`Failed to send SMS to ${to}:`, error);
+    logger.error(`Failed to send SMS to ${to}:`, error.message || error);
     return {
       success: false,
-      error: error.message,
+      error: error.message || 'SMS failed',
     };
   }
 };
