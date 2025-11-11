@@ -156,6 +156,9 @@ export const attendanceAPI = {
   
   completeFollowUp: (attendanceId, data) =>
     api.post(`/api/attendance/${attendanceId}/complete-followup`, data),
+  
+  deleteAttendance: (attendanceId) =>
+    api.delete(`/api/attendance/${attendanceId}`),
 };
 
 // Assessment APIs

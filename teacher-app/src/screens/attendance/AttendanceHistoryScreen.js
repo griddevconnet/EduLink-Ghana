@@ -5,6 +5,7 @@ import {
   StyleSheet,
   RefreshControl,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import {
   Text,
@@ -15,6 +16,7 @@ import {
   Divider,
   IconButton,
   SegmentedButtons,
+  Snackbar,
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -35,6 +37,9 @@ export default function AttendanceHistoryScreen({ navigation }) {
     absentCount: 0,
     attendanceRate: 0,
   });
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     loadAttendanceHistory();
@@ -194,6 +199,44 @@ export default function AttendanceHistoryScreen({ navigation }) {
   const onRefresh = () => {
     setRefreshing(true);
     loadAttendanceHistory();
+  };
+
+  const deleteAttendance = (record) => {
+    Alert.alert(
+      'Delete Attendance',
+      `Delete attendance for ${record.student?.firstName} ${record.student?.lastName} on ${formatDate(record.date)}?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setDeletingId(record._id);
+              
+              // Call delete API
+              await attendanceAPI.deleteAttendance(record._id);
+              
+              // Show success message
+              setSnackbarMessage('Attendance deleted successfully');
+              setSnackbarVisible(true);
+              
+              // Reload data
+              await loadAttendanceHistory();
+            } catch (error) {
+              console.error('Error deleting attendance:', error);
+              setSnackbarMessage('Failed to delete attendance');
+              setSnackbarVisible(true);
+            } finally {
+              setDeletingId(null);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const formatDate = (dateString) => {
@@ -380,16 +423,17 @@ export default function AttendanceHistoryScreen({ navigation }) {
               {/* Records for this date */}
               {group.records.map((record) => (
                 <Card key={record._id} style={styles.recordCard}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      // Navigate to student detail
-                      navigation.navigate('Students', {
-                        screen: 'StudentDetail',
-                        params: { studentId: record.student?._id },
-                      });
-                    }}
-                  >
-                    <Card.Content style={styles.recordContent}>
+                  <Card.Content style={styles.recordContent}>
+                    <TouchableOpacity
+                      style={styles.recordTouchable}
+                      onPress={() => {
+                        // Navigate to student detail
+                        navigation.navigate('Students', {
+                          screen: 'StudentDetail',
+                          params: { studentId: record.student?._id },
+                        });
+                      }}
+                    >
                       <View style={styles.recordLeft}>
                         <MaterialCommunityIcons
                           name={getStatusIcon(record.status)}
@@ -427,14 +471,35 @@ export default function AttendanceHistoryScreen({ navigation }) {
                           />
                         )}
                       </View>
-                    </Card.Content>
-                  </TouchableOpacity>
+                    </TouchableOpacity>
+                    <IconButton
+                      icon="delete"
+                      size={20}
+                      iconColor="#EF4444"
+                      onPress={() => deleteAttendance(record)}
+                      disabled={deletingId === record._id}
+                      style={styles.deleteButton}
+                    />
+                  </Card.Content>
                 </Card>
               ))}
             </View>
           ))
         )}
       </ScrollView>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={3000}
+        action={{
+          label: 'OK',
+          onPress: () => setSnackbarVisible(false),
+        }}
+      >
+        {snackbarMessage}
+      </Snackbar>
     </View>
   );
 }
@@ -570,6 +635,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 8,
+    paddingHorizontal: 0,
+  },
+  recordTouchable: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   recordLeft: {
     flexDirection: 'row',
@@ -603,5 +674,9 @@ const styles = StyleSheet.create({
   },
   noteIcon: {
     marginLeft: 8,
+  },
+  deleteButton: {
+    margin: 0,
+    marginLeft: 4,
   },
 });
