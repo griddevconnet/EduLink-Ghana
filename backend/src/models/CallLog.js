@@ -117,12 +117,36 @@ const callLogSchema = new mongoose.Schema(
     
     audioStorageProvider: {
       type: String,
-      enum: ['s3', 'digitalocean', 'local'],
+      enum: ['s3', 'digitalocean', 'local', 'africastalking'],
     },
     
     audioDurationSeconds: {
       type: Number,
       min: 0,
+    },
+    
+    // AI Conversational Data
+    aiTranscription: {
+      type: String,
+      trim: true,
+      maxlength: 2000,
+    },
+    
+    aiAnalysis: {
+      reason: {
+        type: String,
+        enum: ['sick', 'traveling', 'working', 'family_emergency', 'other'],
+      },
+      details: String,
+      concerns: String,
+      needsFollowUp: Boolean,
+      detectedLanguage: String,
+    },
+    
+    aiResponse: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
     },
     
     // Cost tracking

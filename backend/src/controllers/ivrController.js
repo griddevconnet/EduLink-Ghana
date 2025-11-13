@@ -1,5 +1,6 @@
 const { generateAbsenceIVR, generateRecordingIVR, generateThankYouIVR, processDTMFInput, handleCallStatusUpdate } = require('../services/callService');
-const { CallLog } = require('../models');
+const { processConversationalCall } = require('../services/openaiService');
+const { CallLog, Attendance } = require('../models');
 const logger = require('../utils/logger');
 
 /**
@@ -114,7 +115,7 @@ const handleCallStatus = async (req, res) => {
 };
 
 /**
- * Handle recording
+ * Handle recording - NOW WITH CONVERSATIONAL AI!
  * POST /api/ivr/recording
  * @access Public (webhook)
  */
@@ -122,25 +123,87 @@ const handleRecording = async (req, res) => {
   try {
     const { sessionId, recordingUrl, durationInSeconds } = req.body;
     
-    logger.info('Recording received:', { sessionId, recordingUrl, durationInSeconds });
+    logger.info('Recording received for conversational AI:', { sessionId, recordingUrl, durationInSeconds });
     
     // Find call log
-    const callLog = await CallLog.findOne({ providerCallId: sessionId });
+    const callLog = await CallLog.findOne({ providerCallId: sessionId })
+      .populate('student', 'firstName lastName')
+      .populate({ path: 'student', populate: { path: 'school', select: 'name' } });
     
-    if (callLog) {
-      callLog.audioBlobPath = recordingUrl;
-      callLog.audioDurationSeconds = durationInSeconds;
-      callLog.audioStorageProvider = 'africastalking';
-      await callLog.save();
-      
-      logger.info(`Recording saved for call ${callLog._id}`);
+    if (!callLog) {
+      logger.warn('Call log not found for recording');
+      const xml = generateThankYouIVR('English');
+      return res.set('Content-Type', 'text/xml').send(xml);
     }
     
-    // Thank and hangup
-    const language = callLog?.languageDetected || 'English';
-    const xml = generateThankYouIVR(language);
+    // Save original recording
+    callLog.audioBlobPath = recordingUrl;
+    callLog.audioDurationSeconds = durationInSeconds;
+    callLog.audioStorageProvider = 'africastalking';
+    await callLog.save();
     
-    res.set('Content-Type', 'text/xml').send(xml);
+    logger.info(`Recording saved for call ${callLog._id}, processing with AI...`);
+    
+    // Process with conversational AI
+    const context = {
+      studentName: `${callLog.student.firstName} ${callLog.student.lastName}`,
+      schoolName: callLog.student.school?.name || 'school',
+    };
+    
+    const aiResult = await processConversationalCall(recordingUrl, context);
+    
+    if (aiResult.success) {
+      // Update call log with AI analysis
+      callLog.languageDetected = aiResult.transcription.language;
+      callLog.dtmfInput = aiResult.transcription.text; // Store what parent said
+      callLog.dtmfMeaning = aiResult.analysis.reason;
+      callLog.result = 'answered';
+      
+      // Store AI response
+      callLog.aiTranscription = aiResult.transcription.text;
+      callLog.aiAnalysis = aiResult.analysis;
+      callLog.aiResponse = aiResult.response.text;
+      
+      await callLog.save();
+      
+      // Update attendance record with reason
+      const attendance = await Attendance.findById(callLog.attendance);
+      if (attendance) {
+        attendance.reason = aiResult.analysis.reason;
+        attendance.reasonDetails = aiResult.analysis.details;
+        attendance.followUpCompleted = true;
+        attendance.followUpCompletedAt = new Date();
+        
+        if (aiResult.analysis.needsFollowUp) {
+          attendance.teacherFollowUpRequired = true;
+        }
+        
+        await attendance.save();
+        logger.info(`Attendance updated with AI analysis: ${aiResult.analysis.reason}`);
+      }
+      
+      // Generate AI response in parent's language
+      const responseText = aiResult.response.text;
+      const language = aiResult.transcription.language;
+      
+      // Play AI response back to parent
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say>${responseText}</Say>
+</Response>`;
+      
+      logger.info(`AI response generated in ${language}:`, responseText);
+      
+      res.set('Content-Type', 'text/xml').send(xml);
+    } else {
+      // AI processing failed, use fallback
+      logger.error('AI processing failed:', aiResult.error);
+      
+      const language = callLog.languageDetected || 'English';
+      const xml = generateThankYouIVR(language);
+      
+      res.set('Content-Type', 'text/xml').send(xml);
+    }
   } catch (error) {
     logger.error('Error handling recording:', error);
     
