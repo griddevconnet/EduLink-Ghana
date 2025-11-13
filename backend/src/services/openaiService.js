@@ -7,10 +7,17 @@ const logger = require('../utils/logger');
  * Supports all Ghanaian languages
  */
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize OpenAI client (only if API key is available)
+let openai = null;
+
+if (process.env.OPENAI_API_KEY) {
+  openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+  logger.info('OpenAI service initialized successfully');
+} else {
+  logger.warn('OPENAI_API_KEY not found - conversational AI features will be disabled');
+}
 
 /**
  * Supported Ghanaian Languages
@@ -36,6 +43,13 @@ const GHANAIAN_LANGUAGES = {
  */
 const speechToText = async (audioUrl) => {
   try {
+    if (!openai) {
+      return {
+        success: false,
+        error: 'OpenAI API key not configured',
+      };
+    }
+    
     logger.info('Converting speech to text:', audioUrl);
     
     // Download audio file
@@ -82,6 +96,13 @@ const speechToText = async (audioUrl) => {
  */
 const analyzeParentResponse = async (parentResponse, language, context) => {
   try {
+    if (!openai) {
+      return {
+        success: false,
+        error: 'OpenAI API key not configured',
+      };
+    }
+    
     const { studentName, schoolName } = context;
     
     const systemPrompt = `You are an AI assistant for ${schoolName} in Ghana. 
@@ -145,6 +166,13 @@ Analyze this response and extract the absence reason.`;
  */
 const generateAIResponse = async (analysis, language, context) => {
   try {
+    if (!openai) {
+      return {
+        success: false,
+        error: 'OpenAI API key not configured',
+      };
+    }
+    
     const { studentName, schoolName } = context;
     
     const systemPrompt = `You are a friendly AI assistant for ${schoolName} in Ghana.
@@ -203,6 +231,13 @@ The response should:
  */
 const textToSpeech = async (text, language) => {
   try {
+    if (!openai) {
+      return {
+        success: false,
+        error: 'OpenAI API key not configured',
+      };
+    }
+    
     logger.info('Converting text to speech:', { text, language });
     
     // Select appropriate voice based on language
